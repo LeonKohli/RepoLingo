@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Convert GitHub repositories to LLM-friendly context. Optimize your AI training data with our advanced, customizable tool.">
+    <title>Advanced GitHub to LLM Context | AI-Powered Code Converter</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #3a86ff;
+            --secondary: #8338ec;
+            --success: #06d6a0;
+            --warning: #ffd166;
+            --danger: #ef476f;
+            --light: #f8f9fa;
+            --dark: #212529;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background: linear-gradient(135deg, var(--light), #e9ecef);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #repoForm, .settings {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        input, button, select, textarea {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        input[type="text"], input[type="url"], textarea {
+            flex-grow: 1;
+            border: 2px solid #ddd;
+            transition: border-color 0.3s;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        button {
+            background-color: var(--primary);
+            color: white;
+            cursor: pointer;
+            transition: transform 0.1s, background-color 0.3s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            background-color: var(--secondary);
+        }
+        #output {
+            background-color: var(--light);
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 14px;
+        }
+        .message {
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            animation: fadeIn 0.5s;
+        }
+        .error { background-color: var(--danger); color: white; }
+        .success { background-color: var(--success); color: white; }
+        .warning { background-color: var(--warning); color: var(--dark); }
+        .action-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .action-buttons button {
+            padding: 10px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+        }
+        .settings label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 600px) {
+            .container { padding: 20px; }
+            #repoForm, .settings { flex-direction: column; }
+            .action-buttons { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-code"></i> Advanced GitHub to LLM Context</h1>
+        <div class="message warning">
+            <i class="fas fa-exclamation-triangle"></i> Warning: Large repositories may take a while to process
+        </div>
+        <form id="repoForm">
+            <input type="url" id="repoUrl" placeholder="Enter GitHub repository URL" required>
+            <button type="submit"><i class="fas fa-search"></i></button>
+        </form>
+        <h2>Settings</h2>
+        <div class="settings">
+            <label>
+                <input type="checkbox" id="useGitignore" checked>
+                Use .gitignore
+            </label>
+            <label>
+                <input type="checkbox" id="useStandardIgnore" checked>
+                Use standard ignores
+            </label>
+        </div>
+        <div class="settings">
+            <textarea id="customIgnore" rows="3" placeholder="Custom ignore patterns (one per line)"></textarea>
+        </div>
+        <div id="output"></div>
+        <div class="action-buttons">
+            <button id="copyBtn" title="Copy to Clipboard"><i class="fas fa-copy"></i></button>
+            <button id="downloadBtn" title="Download XML"><i class="fas fa-download"></i></button>
+        </div>
+    </div>
+    <script>
+        const $ = document.querySelector.bind(document);
+        const repoForm = $('#repoForm');
+        const repoUrl = $('#repoUrl');
+        const output = $('#output');
+        const copyBtn = $('#copyBtn');
+        const downloadBtn = $('#downloadBtn');
+        const useGitignore = $('#useGitignore');
+        const useStandardIgnore = $('#useStandardIgnore');
+        const customIgnore = $('#customIgnore');
+
+        let xmlContent = '';
+        let gitignorePatterns = [];
+        const standardIgnorePatterns = [
+            '.git', '.github', '.gitignore', '.gitattributes',
+            'node_modules', 'venv', '__pycache__',
+            '.DS_Store', 'Thumbs.db',
+            '*.log', '*.tmp', '*.temp',
+            '*.swp', '*.swo', '*.bak',
+            'build', 'dist', 'out',
+            'coverage', '.nyc_output',
+            '.env', '.env.local', '.env.*.local'
+        ];
+
+        const showMessage = (message, type) => {
+            const msgEl = document.createElement('div');
+            msgEl.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
+            msgEl.className = `message ${type}`;
+            output.insertAdjacentElement('beforebegin', msgEl);
+            setTimeout(() => msgEl.remove(), 5000);
+        };
+
+        const fetchRepo = async (url) => {
+            const [owner, repo] = new URL(url).pathname.split('/').filter(Boolean);
+            if (!owner || !repo) throw new Error('Invalid repository URL');
+            
+            const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents`;
+            if (useGitignore.checked) {
+                gitignorePatterns = await fetchGitignore(`https://api.github.com/repos/${owner}/${repo}/contents/.gitignore`);
+            }
+            const contents = await fetchContents(apiUrl);
+            return formatXml(contents, owner, repo);
+        };
+
+        const fetchGitignore = async (url) => {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) return [];
+                const data = await response.json();
+                const content = atob(data.content);
+                return content.split('\n')
+                    .filter(line => line.trim() && !line.startsWith('#'))
+                    .map(line => new RegExp(line.replace(/\*/g, '.*')));
+            } catch (error) {
+                console.error('Error fetching .gitignore:', error);
+                return [];
+            }
+        };
+
+        const shouldIgnore = (path) => {
+            const customPatterns = customIgnore.value.split('\n').map(p => p.trim()).filter(Boolean);
+            const allPatterns = [
+                ...(useGitignore.checked ? gitignorePatterns : []),
+                ...(useStandardIgnore.checked ? standardIgnorePatterns.map(p => new RegExp(p.replace(/\*/g, '.*'))) : []),
+                ...customPatterns.map(p => new RegExp(p.replace(/\*/g, '.*')))
+            ];
+            return allPatterns.some(pattern => pattern.test(path));
+        };
+
+        const fetchContents = async (url, path = '') => {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Failed to fetch repository contents');
+            const data = await response.json();
+
+            return (await Promise.all(data.map(async item => {
+                if (shouldIgnore(item.path)) return null;
+                if (item.type === 'dir') {
+                    const contents = await fetchContents(item.url, item.path);
+                    return { type: 'dir', name: item.name, path: item.path, contents: contents.filter(Boolean) };
+                } else {
+                    const content = await (await fetch(item.download_url)).text();
+                    return { type: 'file', name: item.name, path: item.path, content };
+                }
+            }))).filter(Boolean);
+        };
+
+        const formatXml = (contents, owner, repo) => {
+            const escape = str => str.replace(/[<>&'"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;',"'":'&apos;','"':'&quot;'}[c]));
+            const formatContents = (items, indent) => items.map(item => {
+                const ind = '  '.repeat(indent);
+                if (item.type === 'dir') {
+                    return `${ind}<directory name="${escape(item.name)}" path="${escape(item.path)}">\n${formatContents(item.contents, indent + 1)}${ind}</directory>`;
+                } else {
+                    return `${ind}<file name="${escape(item.name)}" path="${escape(item.path)}"><content><![CDATA[${item.content}]]></content></file>`;
+                }
+            }).join('\n');
+
+            return `<llm_context>
+  <repository name="${escape(owner)}/${escape(repo)}">
+    <metadata>
+      <description>Repository contents for LLM context</description>
+      <fetch_date>${new Date().toISOString()}</fetch_date>
+    </metadata>
+    <contents>
+${formatContents(contents, 3)}
+    </contents>
+  </repository>
+</llm_context>`;
+        };
+
+        repoForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            output.innerHTML = '<p>Fetching repository contents...</p>';
+            try {
+                xmlContent = await fetchRepo(repoUrl.value);
+                output.innerHTML = `<pre>${xmlContent.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>`;
+                showMessage('Repository fetched successfully!', 'success');
+            } catch (error) {
+                output.innerHTML = '';
+                showMessage(error.message, 'error');
+            }
+        });
+
+        copyBtn.addEventListener('click', () => {
+            if (!xmlContent) return showMessage('No content to copy', 'error');
+            navigator.clipboard.writeText(xmlContent)
+                .then(() => showMessage('Copied to clipboard!', 'success'))
+                .catch(() => showMessage('Failed to copy', 'error'));
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            if (!xmlContent) return showMessage('No content to download', 'error');
+            const blob = new Blob([xmlContent], {type: 'text/xml'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'repo_contents.xml';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html>
