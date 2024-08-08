@@ -169,6 +169,15 @@
             '.env', '.env.local', '.env.*.local'
         ];
 
+        const binaryExtensions = [
+            'png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'ico', 'webp',
+            'mp3', 'wav', 'ogg', 'mp4', 'avi', 'mov', 'wmv', 'flv',
+            'zip', 'tar', 'gz', 'rar', '7z',
+            'exe', 'dll', 'so', 'dylib',
+            'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx',
+            'iso', 'bin', 'dat'
+        ];
+
         const showMessage = (message, type) => {
             const msgEl = document.createElement('div');
             msgEl.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
@@ -209,7 +218,8 @@
             const allPatterns = [
                 ...(useGitignore.checked ? gitignorePatterns : []),
                 ...(useStandardIgnore.checked ? standardIgnorePatterns.map(p => new RegExp(p.replace(/\*/g, '.*'))) : []),
-                ...customPatterns.map(p => new RegExp(p.replace(/\*/g, '.*')))
+                ...customPatterns.map(p => new RegExp(p.replace(/\*/g, '.*'))),
+                ...binaryExtensions.map(ext => new RegExp(`\\.${ext}$`, 'i'))
             ];
             return allPatterns.some(pattern => pattern.test(path));
         };
