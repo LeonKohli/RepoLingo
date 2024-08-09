@@ -113,6 +113,26 @@
             #repoForm, .settings { flex-direction: column; }
             .action-buttons { justify-content: center; }
         }
+        
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #repoInfo {
+            margin-top: 20px;
+            font-weight: bold;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -125,6 +145,7 @@
             <input type="url" id="repoUrl" placeholder="Enter GitHub repository URL" required>
             <button type="submit"><i class="fas fa-search"></i></button>
         </form>
+        <div id="repoInfo"></div>
         <h2>Settings</h2>
         <div class="settings">
             <label>
@@ -139,6 +160,7 @@
         <div class="settings">
             <textarea id="customIgnore" rows="3" placeholder="Custom ignore patterns (one per line)"></textarea>
         </div>
+        <div class="loader" id="loader"></div>
         <div id="output"></div>
         <div class="action-buttons">
             <button id="copyBtn" title="Copy to Clipboard"><i class="fas fa-copy"></i></button>
@@ -155,9 +177,12 @@
         const useGitignore = $('#useGitignore');
         const useStandardIgnore = $('#useStandardIgnore');
         const customIgnore = $('#customIgnore');
+        const loader = $('#loader');
+        const repoInfo = $('#repoInfo');
 
         let xmlContent = '';
         let gitignorePatterns = [];
+        let currentRepoName = '';
         const standardIgnorePatterns = [
             '.git', '.github', '.gitignore', '.gitattributes',
             'node_modules', 'venv', '__pycache__',
@@ -190,6 +215,9 @@
             const [owner, repo] = new URL(url).pathname.split('/').filter(Boolean);
             if (!owner || !repo) throw new Error('Invalid repository URL');
             
+            currentRepoName = `${owner}_${repo}`;
+            repoInfo.textContent = `Repository: ${owner}/${repo}`;
+            
             const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents`;
             if (useGitignore.checked) {
                 gitignorePatterns = await fetchGitignore(`https://api.github.com/repos/${owner}/${repo}/contents/.gitignore`);
@@ -206,7 +234,7 @@
                 const content = atob(data.content);
                 return content.split('\n')
                     .filter(line => line.trim() && !line.startsWith('#'))
-                    .map(line => new RegExp(line.replace(/\*/g, '.*')));
+                    .map(line => new RegExp(line.replace(/\*/g, '.*').replace(/\./g, '\\.')));
             } catch (error) {
                 console.error('Error fetching .gitignore:', error);
                 return [];
@@ -217,8 +245,8 @@
             const customPatterns = customIgnore.value.split('\n').map(p => p.trim()).filter(Boolean);
             const allPatterns = [
                 ...(useGitignore.checked ? gitignorePatterns : []),
-                ...(useStandardIgnore.checked ? standardIgnorePatterns.map(p => new RegExp(p.replace(/\*/g, '.*'))) : []),
-                ...customPatterns.map(p => new RegExp(p.replace(/\*/g, '.*'))),
+                ...(useStandardIgnore.checked ? standardIgnorePatterns.map(p => new RegExp(p.replace(/\*/g, '.*').replace(/\./g, '\\.'))) : []),
+                ...customPatterns.map(p => new RegExp(p.replace(/\*/g, '.*').replace(/\./g, '\\.'))),
                 ...binaryExtensions.map(ext => new RegExp(`\\.${ext}$`, 'i'))
             ];
             return allPatterns.some(pattern => pattern.test(path));
@@ -267,14 +295,16 @@ ${formatContents(contents, 3)}
 
         repoForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            output.innerHTML = '<p>Fetching repository contents...</p>';
+            output.innerHTML = '';
+            loader.style.display = 'block';
             try {
                 xmlContent = await fetchRepo(repoUrl.value);
                 output.innerHTML = `<pre>${xmlContent.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>`;
                 showMessage('Repository fetched successfully!', 'success');
             } catch (error) {
-                output.innerHTML = '';
                 showMessage(error.message, 'error');
+            } finally {
+                loader.style.display = 'none';
             }
         });
 
@@ -291,7 +321,8 @@ ${formatContents(contents, 3)}
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'repo_contents.xml';
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            a.download = `${currentRepoName}_llm_context_${timestamp}.xml`;
             a.click();
             URL.revokeObjectURL(url);
         });
