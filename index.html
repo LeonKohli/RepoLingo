@@ -179,7 +179,7 @@
         </div>
     </div>
     <script>
-        const $ = document.querySelector.bind(document);
+     const $ = document.querySelector.bind(document);
 const repoForm = $('#repoForm');
 const repoUrl = $('#repoUrl');
 const apiKey = $('#apiKey');
@@ -199,6 +199,7 @@ let xmlContent = '';
 let gitignorePatterns = [];
 let currentRepoName = '';
 let currentRepoOwner = '';
+let defaultBranch = '';
 const standardIgnorePatterns = [
     '.git', '.github', '.gitignore', '.gitattributes',
     'node_modules', 'venv', '__pycache__',
@@ -252,6 +253,14 @@ const updateRateLimitInfo = (headers) => {
     }
 };
 
+const fetchRepoInfo = async (owner, repo) => {
+    const url = `https://api.github.com/repos/${owner}/${repo}`;
+    const response = await fetchWithAuth(url);
+    const data = await response.json();
+    defaultBranch = data.default_branch;
+    return data;
+};
+
 const fetchBranches = async (owner, repo) => {
     const url = `https://api.github.com/repos/${owner}/${repo}/branches`;
     const response = await fetchWithAuth(url);
@@ -261,6 +270,9 @@ const fetchBranches = async (owner, repo) => {
         const option = document.createElement('option');
         option.value = branch.name;
         option.textContent = branch.name;
+        if (branch.name === defaultBranch) {
+            option.selected = true;
+        }
         branchSelect.appendChild(option);
     });
 };
@@ -271,11 +283,13 @@ const fetchRepo = async (url) => {
     
     currentRepoName = `${owner}_${repo}`;
     currentRepoOwner = owner;
-    repoInfo.textContent = `Repository: ${owner}/${repo}`;
     
+    await fetchRepoInfo(owner, repo);
     await fetchBranches(owner, repo);
 
-    const branch = branchSelect.value || 'main';
+    repoInfo.textContent = `Repository: ${owner}/${repo} (Default branch: ${defaultBranch})`;
+
+    const branch = branchSelect.value || defaultBranch;
     
     if (useGitignore.checked) {
         gitignorePatterns = await fetchGitignore(`https://api.github.com/repos/${owner}/${repo}/contents/.gitignore?ref=${branch}`);
