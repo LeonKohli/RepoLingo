@@ -276,13 +276,12 @@ const fetchRepo = async (url) => {
     await fetchBranches(owner, repo);
 
     const branch = branchSelect.value || 'main';
-    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`;
     
     if (useGitignore.checked) {
         gitignorePatterns = await fetchGitignore(`https://api.github.com/repos/${owner}/${repo}/contents/.gitignore?ref=${branch}`);
     }
     
-    const contents = await fetchContents(apiUrl, owner, repo, branch);
+    const contents = await fetchContents(`https://api.github.com/repos/${owner}/${repo}/contents`, branch);
     return formatXml(contents, owner, repo, branch);
 };
 
@@ -311,56 +310,29 @@ const shouldIgnore = (path) => {
     return allPatterns.some(pattern => pattern.test(path));
 };
 
-const fetchContents = async (url, owner, repo, branch) => {
-    const response = await fetchWithAuth(url);
+const fetchContents = async (url, branch, path = '') => {
+    const response = await fetchWithAuth(`${url}${path ? `/${path}` : ''}?ref=${branch}`);
     const data = await response.json();
-    
-    if (!data.tree) {
-        throw new Error('Unable to fetch repository contents');
-    }
 
     const contents = [];
-    for (const item of data.tree) {
+    for (const item of data) {
         if (shouldIgnore(item.path)) continue;
-        
-        if (item.type === 'tree') {
-            contents.push({ type: 'dir', name: item.path.split('/').pop(), path: item.path, contents: [] });
-        } else if (item.type === 'blob') {
+
+        if (item.type === 'dir') {
+            const subContents = await fetchContents(url, branch, item.path);
+            contents.push({ type: 'dir', name: item.name, path: item.path, contents: subContents });
+        } else if (item.type === 'file') {
             if (item.size > fileSizeLimit.value * 1024) {
                 showMessage(`Skipping ${item.path}: File size exceeds limit`, 'warning');
                 continue;
             }
-            const contentUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${item.path}?ref=${branch}`;
-            const contentResponse = await fetchWithAuth(contentUrl);
-            const contentData = await contentResponse.json();
-            const content = atob(contentData.content);
-            contents.push({ type: 'file', name: item.path.split('/').pop(), path: item.path, content });
+            const contentResponse = await fetchWithAuth(item.download_url);
+            const content = await contentResponse.text();
+            contents.push({ type: 'file', name: item.name, path: item.path, content });
         }
     }
 
-    return organizeContents(contents);
-};
-
-const organizeContents = (flatContents) => {
-    const root = { type: 'dir', name: '', path: '', contents: [] };
-    
-    flatContents.forEach(item => {
-        const parts = item.path.split('/');
-        let current = root;
-        
-        parts.slice(0, -1).forEach(part => {
-            let child = current.contents.find(c => c.type === 'dir' && c.name === part);
-            if (!child) {
-                child = { type: 'dir', name: part, path: `${current.path}/${part}`.replace(/^\//, ''), contents: [] };
-                current.contents.push(child);
-            }
-            current = child;
-        });
-        
-        current.contents.push(item);
-    });
-    
-    return root.contents;
+    return contents;
 };
 
 const formatXml = (contents, owner, repo, branch) => {
