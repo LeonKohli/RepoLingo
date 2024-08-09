@@ -49,12 +49,12 @@
             border-radius: 8px;
             font-size: 16px;
         }
-        input[type="text"], input[type="url"], textarea {
+        input[type="text"], input[type="url"], input[type="password"], textarea, select {
             flex-grow: 1;
             border: 2px solid #ddd;
             transition: border-color 0.3s;
         }
-        input:focus, textarea:focus {
+        input:focus, textarea:focus, select:focus {
             outline: none;
             border-color: var(--primary);
         }
@@ -87,6 +87,7 @@
         .error { background-color: var(--danger); color: white; }
         .success { background-color: var(--success); color: white; }
         .warning { background-color: var(--warning); color: var(--dark); }
+        .info { background-color: var(--primary); color: white; }
         .action-buttons {
             display: flex;
             justify-content: flex-end;
@@ -104,16 +105,6 @@
             align-items: center;
             gap: 5px;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @media (max-width: 600px) {
-            .container { padding: 20px; }
-            #repoForm, .settings { flex-direction: column; }
-            .action-buttons { justify-content: center; }
-        }
-        
         .loader {
             border: 5px solid #f3f3f3;
             border-top: 5px solid var(--primary);
@@ -128,10 +119,19 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        #repoInfo {
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        #repoInfo, #rateLimitInfo {
             margin-top: 20px;
             font-weight: bold;
             text-align: center;
+        }
+        @media (max-width: 600px) {
+            .container { padding: 20px; }
+            #repoForm, .settings { flex-direction: column; }
+            .action-buttons { justify-content: center; }
         }
     </style>
 </head>
@@ -143,9 +143,11 @@
         </div>
         <form id="repoForm">
             <input type="url" id="repoUrl" placeholder="Enter GitHub repository URL" required>
+            <input type="password" id="apiKey" placeholder="GitHub API Key (optional)">
             <button type="submit"><i class="fas fa-search"></i></button>
         </form>
         <div id="repoInfo"></div>
+        <div id="rateLimitInfo"></div>
         <h2>Settings</h2>
         <div class="settings">
             <label>
@@ -156,6 +158,15 @@
                 <input type="checkbox" id="useStandardIgnore" checked>
                 Use standard ignores
             </label>
+            <label>
+                File size limit (KB):
+                <input type="number" id="fileSizeLimit" value="1000" min="1" max="10000">
+            </label>
+        </div>
+        <div class="settings">
+            <select id="branchSelect">
+                <option value="">Select a branch</option>
+            </select>
         </div>
         <div class="settings">
             <textarea id="customIgnore" rows="3" placeholder="Custom ignore patterns (one per line)"></textarea>
@@ -171,6 +182,7 @@
         const $ = document.querySelector.bind(document);
         const repoForm = $('#repoForm');
         const repoUrl = $('#repoUrl');
+        const apiKey = $('#apiKey');
         const output = $('#output');
         const copyBtn = $('#copyBtn');
         const downloadBtn = $('#downloadBtn');
@@ -179,10 +191,14 @@
         const customIgnore = $('#customIgnore');
         const loader = $('#loader');
         const repoInfo = $('#repoInfo');
+        const rateLimitInfo = $('#rateLimitInfo');
+        const fileSizeLimit = $('#fileSizeLimit');
+        const branchSelect = $('#branchSelect');
 
         let xmlContent = '';
         let gitignorePatterns = [];
         let currentRepoName = '';
+        let currentRepoOwner = '';
         const standardIgnorePatterns = [
             '.git', '.github', '.gitignore', '.gitattributes',
             'node_modules', 'venv', '__pycache__',
@@ -211,25 +227,66 @@
             setTimeout(() => msgEl.remove(), 5000);
         };
 
+        const fetchWithAuth = async (url, options = {}) => {
+            const headers = new Headers(options.headers || {});
+            if (apiKey.value) {
+                headers.set('Authorization', `token ${apiKey.value}`);
+            }
+            const response = await fetch(url, { ...options, headers });
+            updateRateLimitInfo(response.headers);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response;
+        };
+
+        const updateRateLimitInfo = (headers) => {
+            const remaining = headers.get('X-RateLimit-Remaining');
+            const limit = headers.get('X-RateLimit-Limit');
+            const reset = headers.get('X-RateLimit-Reset');
+            if (remaining && limit && reset) {
+                const resetDate = new Date(reset * 1000).toLocaleTimeString();
+                rateLimitInfo.textContent = `API Rate Limit: ${remaining}/${limit} | Resets at ${resetDate}`;
+            }
+        };
+
+        const fetchBranches = async (owner, repo) => {
+            const url = `https://api.github.com/repos/${owner}/${repo}/branches`;
+            const response = await fetchWithAuth(url);
+            const branches = await response.json();
+            branchSelect.innerHTML = '<option value="">Select a branch</option>';
+            branches.forEach(branch => {
+                const option = document.createElement('option');
+                option.value = branch.name;
+                option.textContent = branch.name;
+                branchSelect.appendChild(option);
+            });
+        };
+
         const fetchRepo = async (url) => {
             const [owner, repo] = new URL(url).pathname.split('/').filter(Boolean);
             if (!owner || !repo) throw new Error('Invalid repository URL');
             
             currentRepoName = `${owner}_${repo}`;
+            currentRepoOwner = owner;
             repoInfo.textContent = `Repository: ${owner}/${repo}`;
             
-            const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents`;
+            await fetchBranches(owner, repo);
+
+            const branch = branchSelect.value || 'main';
+            const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents?ref=${branch}`;
+            
             if (useGitignore.checked) {
-                gitignorePatterns = await fetchGitignore(`https://api.github.com/repos/${owner}/${repo}/contents/.gitignore`);
+                gitignorePatterns = await fetchGitignore(`https://api.github.com/repos/${owner}/${repo}/contents/.gitignore?ref=${branch}`);
             }
+            
             const contents = await fetchContents(apiUrl);
-            return formatXml(contents, owner, repo);
+            return formatXml(contents, owner, repo, branch);
         };
 
         const fetchGitignore = async (url) => {
             try {
-                const response = await fetch(url);
-                if (!response.ok) return [];
+                const response = await fetchWithAuth(url);
                 const data = await response.json();
                 const content = atob(data.content);
                 return content.split('\n')
@@ -253,8 +310,7 @@
         };
 
         const fetchContents = async (url, path = '') => {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error('Failed to fetch repository contents');
+            const response = await fetchWithAuth(url);
             const data = await response.json();
 
             return (await Promise.all(data.map(async item => {
@@ -263,13 +319,18 @@
                     const contents = await fetchContents(item.url, item.path);
                     return { type: 'dir', name: item.name, path: item.path, contents: contents.filter(Boolean) };
                 } else {
-                    const content = await (await fetch(item.download_url)).text();
+                    if (item.size > fileSizeLimit.value * 1024) {
+                        showMessage(`Skipping ${item.path}: File size exceeds limit`, 'warning');
+                        return null;
+                    }
+                    const contentResponse = await fetchWithAuth(item.download_url);
+                    const content = await contentResponse.text();
                     return { type: 'file', name: item.name, path: item.path, content };
                 }
             }))).filter(Boolean);
         };
 
-        const formatXml = (contents, owner, repo) => {
+        const formatXml = (contents, owner, repo, branch) => {
             const escape = str => str.replace(/[<>&'"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;',"'":'&apos;','"':'&quot;'}[c]));
             const formatContents = (items, indent) => items.map(item => {
                 const ind = '  '.repeat(indent);
@@ -285,6 +346,7 @@
     <metadata>
       <description>Repository contents for LLM context</description>
       <fetch_date>${new Date().toISOString()}</fetch_date>
+      <branch>${escape(branch)}</branch>
     </metadata>
     <contents>
 ${formatContents(contents, 3)}
@@ -326,6 +388,24 @@ ${formatContents(contents, 3)}
             a.click();
             URL.revokeObjectURL(url);
         });
+
+        branchSelect.addEventListener('change', async () => {
+            if (currentRepoOwner && currentRepoName) {
+                try {
+                    loader.style.display = 'block';
+                    xmlContent = await fetchRepo(`https://github.com/${currentRepoOwner}/${currentRepoName.split('_')[1]}`);
+                    output.innerHTML = `<pre>${xmlContent.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>`;
+                    showMessage('Repository content updated for selected branch', 'success');
+                } catch (error) {
+                    showMessage(error.message, 'error');
+                } finally {
+                    loader.style.display = 'none';
+                }
+            }
+        });
+
+        // Initialize with empty rate limit info
+        rateLimitInfo.textContent = 'API Rate Limit: N/A';
     </script>
 </body>
 </html>
