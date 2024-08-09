@@ -6,7 +6,6 @@
     <meta name="description" content="Convert GitHub repositories to LLM-friendly context. Optimize your AI training data with our advanced, customizable tool.">
     <title>Advanced GitHub to LLM Context | AI-Powered Code Converter</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/file-is-binary@1.0.0/index.min.js"></script>
     <style>
         :root {
             --primary: #3a86ff;
@@ -180,7 +179,7 @@
         </div>
     </div>
     <script>
- const $ = document.querySelector.bind(document);
+        const $ = document.querySelector.bind(document);
 const repoForm = $('#repoForm');
 const repoUrl = $('#repoUrl');
 const apiKey = $('#apiKey');
@@ -211,6 +210,15 @@ const standardIgnorePatterns = [
     '.env', '.env.local', '.env.*.local'
 ];
 
+const binaryExtensions = [
+    'png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff', 'ico', 'webp',
+    'mp3', 'wav', 'ogg', 'mp4', 'avi', 'mov', 'wmv', 'flv',
+    'zip', 'tar', 'gz', 'rar', '7z',
+    'exe', 'dll', 'so', 'dylib',
+    'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx',
+    'iso', 'bin', 'dat'
+];
+
 const showMessage = (message, type) => {
     const msgEl = document.createElement('div');
     msgEl.innerHTML = `<i class="fas fa-info-circle"></i> ${message}`;
@@ -224,10 +232,12 @@ const fetchWithAuth = async (url, options = {}) => {
     if (apiKey.value) {
         headers.set('Authorization', `token ${apiKey.value}`);
     }
+    headers.set('Accept', 'application/vnd.github.v3+json');
     const response = await fetch(url, { ...options, headers });
     updateRateLimitInfo(response.headers);
     if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorBody = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorBody}`);
     }
     return response;
 };
@@ -266,13 +276,13 @@ const fetchRepo = async (url) => {
     await fetchBranches(owner, repo);
 
     const branch = branchSelect.value || 'main';
-    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents?ref=${branch}`;
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`;
     
     if (useGitignore.checked) {
         gitignorePatterns = await fetchGitignore(`https://api.github.com/repos/${owner}/${repo}/contents/.gitignore?ref=${branch}`);
     }
     
-    const contents = await fetchContents(apiUrl);
+    const contents = await fetchContents(apiUrl, owner, repo, branch);
     return formatXml(contents, owner, repo, branch);
 };
 
@@ -295,39 +305,62 @@ const shouldIgnore = (path) => {
     const allPatterns = [
         ...(useGitignore.checked ? gitignorePatterns : []),
         ...(useStandardIgnore.checked ? standardIgnorePatterns.map(p => new RegExp(p.replace(/\*/g, '.*').replace(/\./g, '\\.'))) : []),
-        ...customPatterns.map(p => new RegExp(p.replace(/\*/g, '.*').replace(/\./g, '\\.')))
+        ...customPatterns.map(p => new RegExp(p.replace(/\*/g, '.*').replace(/\./g, '\\.'))),
+        ...binaryExtensions.map(ext => new RegExp(`\\.${ext}$`, 'i'))
     ];
     return allPatterns.some(pattern => pattern.test(path));
 };
 
-const fetchContents = async (url, path = '') => {
+const fetchContents = async (url, owner, repo, branch) => {
     const response = await fetchWithAuth(url);
     const data = await response.json();
+    
+    if (!data.tree) {
+        throw new Error('Unable to fetch repository contents');
+    }
 
-    const processItem = async (item) => {
-        if (shouldIgnore(item.path)) return null;
-        if (item.type === 'dir') {
-            const contents = await fetchContents(item.url, item.path);
-            return { type: 'dir', name: item.name, path: item.path, contents: contents.filter(Boolean) };
-        } else {
+    const contents = [];
+    for (const item of data.tree) {
+        if (shouldIgnore(item.path)) continue;
+        
+        if (item.type === 'tree') {
+            contents.push({ type: 'dir', name: item.path.split('/').pop(), path: item.path, contents: [] });
+        } else if (item.type === 'blob') {
             if (item.size > fileSizeLimit.value * 1024) {
                 showMessage(`Skipping ${item.path}: File size exceeds limit`, 'warning');
-                return null;
+                continue;
             }
-            const contentResponse = await fetchWithAuth(item.download_url);
-            const content = await contentResponse.arrayBuffer();
-            const isBinary = fileIsBinary.sync(new Uint8Array(content));
-            return { 
-                type: 'file', 
-                name: item.name, 
-                path: item.path, 
-                content: isBinary ? '[Binary file content not shown]' : new TextDecoder().decode(content),
-                isBinary: isBinary
-            };
+            const contentUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${item.path}?ref=${branch}`;
+            const contentResponse = await fetchWithAuth(contentUrl);
+            const contentData = await contentResponse.json();
+            const content = atob(contentData.content);
+            contents.push({ type: 'file', name: item.path.split('/').pop(), path: item.path, content });
         }
-    };
+    }
 
-    return (await Promise.all(data.map(processItem))).filter(Boolean);
+    return organizeContents(contents);
+};
+
+const organizeContents = (flatContents) => {
+    const root = { type: 'dir', name: '', path: '', contents: [] };
+    
+    flatContents.forEach(item => {
+        const parts = item.path.split('/');
+        let current = root;
+        
+        parts.slice(0, -1).forEach(part => {
+            let child = current.contents.find(c => c.type === 'dir' && c.name === part);
+            if (!child) {
+                child = { type: 'dir', name: part, path: `${current.path}/${part}`.replace(/^\//, ''), contents: [] };
+                current.contents.push(child);
+            }
+            current = child;
+        });
+        
+        current.contents.push(item);
+    });
+    
+    return root.contents;
 };
 
 const formatXml = (contents, owner, repo, branch) => {
@@ -337,7 +370,7 @@ const formatXml = (contents, owner, repo, branch) => {
         if (item.type === 'dir') {
             return `${ind}<directory name="${escape(item.name)}" path="${escape(item.path)}">\n${formatContents(item.contents, indent + 1)}${ind}</directory>`;
         } else {
-            return `${ind}<file name="${escape(item.name)}" path="${escape(item.path)}" isBinary="${item.isBinary}"><content><![CDATA[${item.content}]]></content></file>`;
+            return `${ind}<file name="${escape(item.name)}" path="${escape(item.path)}"><content><![CDATA[${item.content}]]></content></file>`;
         }
     }).join('\n');
 
@@ -364,7 +397,7 @@ repoForm.addEventListener('submit', async (e) => {
         output.innerHTML = `<pre>${xmlContent.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>`;
         showMessage('Repository fetched successfully!', 'success');
     } catch (error) {
-        showMessage(error.message, 'error');
+        showMessage(`Error: ${error.message}`, 'error');
     } finally {
         loader.style.display = 'none';
     }
@@ -397,7 +430,7 @@ branchSelect.addEventListener('change', async () => {
             output.innerHTML = `<pre>${xmlContent.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>`;
             showMessage('Repository content updated for selected branch', 'success');
         } catch (error) {
-            showMessage(error.message, 'error');
+            showMessage(`Error: ${error.message}`, 'error');
         } finally {
             loader.style.display = 'none';
         }
