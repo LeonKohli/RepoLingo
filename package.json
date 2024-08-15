@@ -1,0 +1,24 @@
+{
+  "name": "nuxt-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@nuxt/icon": "^1.4.5",
+    "@nuxtjs/color-mode": "^3.4.2",
+    "@nuxtjs/tailwindcss": "^6.12.1",
+    "@octokit/rest": "^21.0.1",
+    "isbinaryfile": "^5.0.2",
+    "nuxt": "^3.12.4",
+    "vue": "latest"
+  },
+  "devDependencies": {
+    "@iconify-json/uil": "^1.1.9"
+  }
+}
