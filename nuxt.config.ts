@@ -21,6 +21,9 @@ export default defineNuxtConfig({
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+      ],
+      script: [
+        { src: process.env.UMAMI_SCRIPT_URL || '', defer: true, 'data-website-id': process.env.UMAMI_WEBSITE_ID || '' }
       ]
     }
   }
