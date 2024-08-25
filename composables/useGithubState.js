@@ -25,7 +25,6 @@ export const useGithubActions = () => {
         method: 'POST',
         body: {
           repoUrl: state.value.repoUrl,
-          apiKey: state.value.apiKey,
           useGitignore: state.value.useGitignore,
           useStandardIgnore: state.value.useStandardIgnore,
           customIgnore: state.value.customIgnore,
@@ -40,8 +39,12 @@ export const useGithubActions = () => {
 
       state.value.output = data.value.xmlContent
       state.value.repoInfo = data.value.repoInfo
-      state.value.rateLimitInfo = parseRateLimitInfo(data.value.rateLimitInfo)
       state.value.branches = data.value.branches
+      
+      // Reset selected branch if it's not in the list of available branches
+      if (state.value.selectedBranch && !data.value.branches.includes(state.value.selectedBranch)) {
+        state.value.selectedBranch = ''
+      }
     } catch (error) {
       state.value.error = error.message
     } finally {
