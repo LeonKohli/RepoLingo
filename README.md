@@ -19,7 +19,7 @@ Convert GitHub repositories to LLM-friendly context. Optimize your AI training d
 
 ## Demo
 
-[Live Demo](https://leonkohli.github.io/github-to-llm-context-converter)
+[Live Page](https://llm-context.leonkohli.dev/)
 
 ## Installation
 
