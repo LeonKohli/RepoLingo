@@ -1,6 +1,7 @@
 <template>
-  <div class="min-h-screen text-gray-800 transition-colors duration-300 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 dark:text-gray-200">
-    <main class="container px-4 py-4 mx-auto max-w-7xl">
+  <div class="min-h-screen text-white transition-colors duration-300 bg-gradient-to-br from-[#0f172a] to-[#1e293b]">
+    <SeoManager />
+    <main class="container px-4 py-6 mx-auto max-w-7xl">
       <div class="flex flex-col gap-8 lg:flex-row" style="min-height: calc(100vh - 6rem);">
         <div class="w-full space-y-8 lg:w-1/2">
           <RepositoryFetcher

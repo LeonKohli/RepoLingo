@@ -4,11 +4,11 @@
       <div
         v-for="toast in toasts"
         :key="toast.id"
-        class="max-w-xs p-4 rounded-lg shadow-lg"
+        class="max-w-xs p-4 border border-white rounded-lg shadow-lg backdrop-filter backdrop-blur-sm border-opacity-10"
         :class="{
-          'bg-blue-500 text-white': toast.type === 'info',
-          'bg-green-500 text-white': toast.type === 'success',
-          'bg-red-500 text-white': toast.type === 'error'
+          'bg-primary bg-opacity-80 text-white': toast.type === 'info',
+          'bg-green-500 bg-opacity-80 text-white': toast.type === 'success',
+          'bg-red-500 bg-opacity-80 text-white': toast.type === 'error'
         }"
       >
         {{ toast.message }}
@@ -22,7 +22,6 @@ defineProps({
   toasts: Array,
 })
 </script>
-
 <style scoped>
 .fade-enter-active,
 .fade-leave-active {

@@ -95,6 +95,7 @@ export const useGithubState = () => useState('github', () => ({
   branches: [],
   selectedBranch: '',
   showApiKeyModal: false,
+  toasts: [],
 }))
 
 export const useGithubActions = () => {
