@@ -3,13 +3,15 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
   devtools: { enabled: true },
   css: ['~/assets/css/main.css'],
-  modules: [
-    '@nuxtjs/tailwindcss',
-    '@nuxt/icon',
-    '@nuxtjs/color-mode'
-  ],
+  modules: ['@nuxtjs/tailwindcss', '@nuxt/icon', '@nuxtjs/color-mode', '@nuxtjs/seo'],
   colorMode: {
     classSuffix: ''
+  },
+  site: {
+    url: 'https://llm-context.leonkohli.dev/',
+    name: 'GitHub to LLM Context Converter',
+    description: 'Convert GitHub repositories to LLM-friendly context. Optimize your AI training data with our advanced, customizable tool.',
+    defaultLocale: 'en'
   },
   app: {
     head: {

@@ -113,7 +113,23 @@
 </template>
 
 <script setup>
-import SeoManager from '~/components/SeoManager.vue'
+useSeoMeta({
+  ogImage: '/og-image-1200x630.png',
+  twitterTitle: 'GitHub to LLM Context Converter',
+  twitterDescription: 'Convert GitHub repositories to LLM-friendly context. Improve your interactions with ChatGPT, Claude, or any LLM by providing comprehensive project context for better understanding and assistance.',
+  twitterImage: '/og-image-1200x630.png',
+  twitterCard: 'summary_large_image'
+})
+
+useHead({
+  link: [
+    {
+      rel: 'icon',
+      type: 'image/x-icon',
+      href: '/favicon.ico'
+    }
+  ]
+})
 
 const githubState = useGithubState()
 const { fetchRepo, fetchBranches, resetState, copyToClipboard, downloadXml, setApiKey } = useGithubActions()

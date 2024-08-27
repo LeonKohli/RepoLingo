@@ -52,17 +52,5 @@ useHead({
 useSeoMeta({
   description: props.description,
   keywords: props.keywords,
-  ogTitle: props.title,
-  ogDescription: props.description,
-  ogType: 'website',
-  ogImage: '/og-image-1200x630.png',
-  ogImageWidth: 1200,
-  ogImageHeight: 630,
-  twitterCard: 'summary_large_image',
-  twitterTitle: props.title,
-  twitterDescription: props.description,
-  twitterImage: '/twitter-image-1200x600.png',
-  twitterImageWidth: 1200,
-  twitterImageHeight: 600,
 })
 </script>
