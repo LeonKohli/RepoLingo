@@ -6,29 +6,49 @@
 const props = defineProps({
   title: {
     type: String,
-    default: 'GitHub to LLM Context Converter'
+    default: 'GitHub to LLM Context Converter | Enhance Your AI Interactions'
   },
   description: {
     type: String,
-    default: 'Convert GitHub repositories to LLM-friendly context. Optimize your AI training data with our advanced, customizable tool.'
+    default: 'Convert GitHub repositories to LLM-friendly context. Improve your interactions with ChatGPT, Claude, or any LLM by providing comprehensive project context for better understanding and assistance.'
   },
   keywords: {
     type: String,
-    default: 'GitHub, LLM, AI, context, converter, repository, machine learning'
+    default: 'GitHub, LLM, AI, XML, context converter, ChatGPT, Claude, project understanding, code assistance, AI interaction'
+  },
+  faqSchema: {
+    type: Array,
+    default: () => []
   }
 })
 
 useHead({
   title: props.title,
-  meta: [
-    { name: 'description', content: props.description },
-    { name: 'keywords', content: props.keywords },
-    { property: 'og:title', content: props.title },
-    { property: 'og:description', content: props.description },
-    { property: 'og:type', content: 'website' },
-    { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:title', content: props.title },
-    { name: 'twitter:description', content: props.description },
+  htmlAttrs: {
+    lang: 'en'
+  },
+  script: [
+    {
+      type: 'application/ld+json',
+      children: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": props.faqSchema
+      })
+    }
   ]
+})
+
+useSeoMeta({
+  description: props.description,
+  keywords: props.keywords,
+  ogTitle: props.title,
+  ogDescription: props.description,
+  ogType: 'website',
+  ogImage: '/og-image.jpg', // Make sure to add an Open Graph image
+  twitterCard: 'summary_large_image',
+  twitterTitle: props.title,
+  twitterDescription: props.description,
+  twitterImage: '/twitter-image.jpg', // Make sure to add a Twitter image
 })
 </script>

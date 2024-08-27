@@ -1,6 +1,6 @@
 <template>
   <section class="p-6 transition-all duration-300 shadow-lg bg-[#0f172a] bg-opacity-50 rounded-2xl hover:shadow-xl border border-white border-opacity-10 backdrop-filter backdrop-blur-sm">
-    <h2 class="mb-6 text-2xl font-semibold text-white">Settings</h2>
+    <p class="mb-6 text-2xl font-semibold text-white">Settings</p>
     <div class="space-y-6">
       <div class="flex items-center justify-between">
         <label for="use-gitignore" class="text-sm font-medium text-gray-300">Use .gitignore</label>

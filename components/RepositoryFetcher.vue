@@ -1,6 +1,6 @@
 <template>
   <section class="p-6 transition-all duration-300 bg-[#0f172a] bg-opacity-50 shadow-lg rounded-2xl hover:shadow-xl border border-white border-opacity-10 backdrop-filter backdrop-blur-sm">
-    <h2 class="mb-6 text-2xl font-semibold text-white">Repository Fetcher</h2>
+    <p class="mb-6 text-2xl font-semibold text-white">Repository Fetcher</p>
     <form @submit.prevent="$emit('fetch-repo')" class="space-y-6">
       <div>
         <label for="repo-url" class="block mb-2 text-sm font-medium text-gray-300">Repository URL</label>

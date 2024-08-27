@@ -1,6 +1,6 @@
 <template>
   <section class="flex flex-col h-full p-6 transition-all duration-300 bg-[#0f172a] bg-opacity-50 shadow-lg rounded-2xl hover:shadow-xl border border-white border-opacity-10 backdrop-filter backdrop-blur-sm">
-    <h2 class="mb-6 text-2xl font-semibold text-white">Output</h2>
+    <p class="mb-6 text-2xl font-semibold text-white">Output</p>
     <div class="flex flex-col flex-grow">
       <div v-if="loading" class="flex flex-col items-center justify-center flex-grow w-11/12 mx-auto transition-all duration-300">
         <div class="w-16 h-16 border-4 rounded-full border-primary animate-spin border-t-transparent"></div>
@@ -8,14 +8,12 @@
       </div>
       <div v-else-if="output" class="flex flex-col flex-grow w-full space-y-4 transition-all duration-300">
         <div class="flex-grow overflow-auto" style="max-height: calc(100vh - 15rem);">
-          <div 
+          <pre 
             class="w-full px-3 py-2 text-sm text-gray-800 whitespace-pre-wrap bg-gray-100 border border-gray-300 rounded-lg focus:outline-none dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
             tabindex="0"
             @keydown.ctrl.a.prevent="selectAllOutput"
             ref="outputContent"
-          >
-            {{ output }}
-          </div>
+          ><code v-html="highlightedOutput"></code></pre>
         </div>
       </div>
       <div v-else class="flex items-center justify-center flex-grow w-11/12 mx-auto text-gray-500 transition-all duration-300 dark:text-gray-400">
@@ -53,6 +51,11 @@
 
 <script setup>
 import { encode } from 'gpt-tokenizer'
+import hljs from 'highlight.js/lib/core'
+import xml from 'highlight.js/lib/languages/xml'
+import 'highlight.js/styles/github-dark.css'
+
+hljs.registerLanguage('xml', xml)
 
 const props = defineProps({
   loading: Boolean,
@@ -100,4 +103,15 @@ const selectAllOutput = () => {
     selection.addRange(range)
   }
 }
+
+const highlightedOutput = computed(() => {
+  if (!props.output) return ''
+  return hljs.highlight(props.output, { language: 'xml' }).value
+})
 </script>
+
+<style>
+.hljs {
+  background: transparent !important;
+}
+</style>

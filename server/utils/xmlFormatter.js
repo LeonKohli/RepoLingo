@@ -29,7 +29,9 @@ const formatContents = (items, indent) => items.map(item => {
     return `${ind}<directory name="${escape(item.name)}" path="${escape(item.path)}">\n${formatContents(item.contents, indent + 1)}${ind}</directory>`
   } else {
     return `${ind}<file name="${escape(item.name)}" path="${escape(item.path)}">
-${ind}  <content><![CDATA[${escapeCDATA(item.content)}]]></content>
+${ind}  <content><![CDATA[
+${item.content.split('\n').map(line => `${ind}    ${line}`).join('\n')}
+${ind}  ]]></content>
 ${ind}</file>`
   }
 }).join('\n')
@@ -49,7 +51,8 @@ ${formattedTree}
     </tree_structure>`
   }
 
-  return `<llm_context>
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<llm_context>
   <repository>
     <metadata>
       <name>${escape(owner)}/${escape(repo)}</name>
