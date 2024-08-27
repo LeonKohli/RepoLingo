@@ -19,6 +19,10 @@ const props = defineProps({
   faqSchema: {
     type: Array,
     default: () => []
+  },
+  canonicalUrl: {
+    type: String,
+    default: 'https://llm-context.leonkohli.dev'
   }
 })
 
@@ -36,6 +40,12 @@ useHead({
         "mainEntity": props.faqSchema
       })
     }
+  ],
+  link: [
+    {
+      rel: 'canonical',
+      href: props.canonicalUrl
+    }
   ]
 })
 
@@ -45,10 +55,14 @@ useSeoMeta({
   ogTitle: props.title,
   ogDescription: props.description,
   ogType: 'website',
-  ogImage: '/og-image.jpg', // Make sure to add an Open Graph image
+  ogImage: '/og-image-1200x630.png',
+  ogImageWidth: 1200,
+  ogImageHeight: 630,
   twitterCard: 'summary_large_image',
   twitterTitle: props.title,
   twitterDescription: props.description,
-  twitterImage: '/twitter-image.jpg', // Make sure to add a Twitter image
+  twitterImage: '/twitter-image-1200x600.png',
+  twitterImageWidth: 1200,
+  twitterImageHeight: 600,
 })
 </script>
