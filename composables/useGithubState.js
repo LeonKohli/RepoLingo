@@ -3,6 +3,7 @@ export const useGithubState = () => useState('github', () => ({
   apiKey: '',
   useGitignore: true,
   useStandardIgnore: true,
+  includeTree: false,
   customIgnore: '',
   output: '',
   loading: false,
@@ -29,7 +30,8 @@ export const useGithubActions = () => {
           useStandardIgnore: state.value.useStandardIgnore,
           customIgnore: state.value.customIgnore,
           fileSizeLimit: state.value.fileSizeLimit,
-          selectedBranch: state.value.selectedBranch
+          selectedBranch: state.value.selectedBranch,
+          includeTree: state.value.includeTree
         }
       })
 
@@ -60,6 +62,7 @@ export const useGithubActions = () => {
     state.value.rateLimitInfo = null
     state.value.branches = []
     state.value.selectedBranch = ''
+    state.value.includeTree = false
   }
 
   const copyToClipboard = () => {
@@ -85,18 +88,6 @@ export const useGithubActions = () => {
     a.click()
     URL.revokeObjectURL(url)
     return { success: true, message: 'XML downloaded successfully' }
-  }
-
-  const parseRateLimitInfo = (rateLimitInfo) => {
-    const match = rateLimitInfo.match(/API Rate Limit: (\d+)\/(\d+) \| Resets at (.+)/)
-    if (match) {
-      return {
-        remaining: parseInt(match[1]),
-        limit: parseInt(match[2]),
-        resetTime: match[3]
-      }
-    }
-    return null
   }
 
   return {

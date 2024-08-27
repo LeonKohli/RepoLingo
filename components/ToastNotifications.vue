@@ -1,35 +1,36 @@
 <template>
-  <div class="fixed bottom-4 right-4 z-50 space-y-2">
-    <TransitionGroup name="fade">
-      <div v-for="toast in toasts" :key="toast.id" 
-           class="p-4 rounded-lg shadow-lg text-white max-w-sm"
-           :class="toastClasses[toast.type]">
+  <div class="fixed bottom-0 right-0 z-50 p-4 space-y-4">
+    <transition-group name="fade">
+      <div
+        v-for="toast in toasts"
+        :key="toast.id"
+        class="max-w-xs p-4 rounded-lg shadow-lg"
+        :class="{
+          'bg-blue-500 text-white': toast.type === 'info',
+          'bg-green-500 text-white': toast.type === 'success',
+          'bg-red-500 text-white': toast.type === 'error'
+        }"
+      >
         {{ toast.message }}
       </div>
-    </TransitionGroup>
+    </transition-group>
   </div>
 </template>
 
 <script setup>
-const props = defineProps({
-  toasts: Array
+defineProps({
+  toasts: Array,
 })
-
-const toastClasses = {
-  success: 'bg-green-500',
-  error: 'bg-red-500',
-  info: 'bg-blue-500'
-}
 </script>
 
 <style scoped>
 .fade-enter-active,
 .fade-leave-active {
-  transition: all 0.3s ease;
+  transition: opacity 0.5s ease;
 }
+
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
-  transform: translateY(30px);
 }
 </style>

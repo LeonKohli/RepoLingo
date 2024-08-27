@@ -14,9 +14,12 @@
     "@nuxtjs/color-mode": "^3.4.2",
     "@nuxtjs/tailwindcss": "^6.12.1",
     "@octokit/rest": "^21.0.1",
+    "highlight.js": "^11.10.0",
     "isbinaryfile": "^5.0.2",
     "nuxt": "^3.12.4",
-    "vue": "latest"
+    "nuxt-shiki": "^0.3.0",
+    "vue": "latest",
+    "vue-highlight.js": "^3.1.0"
   },
   "devDependencies": {
     "@iconify-json/uil": "^1.1.9"
