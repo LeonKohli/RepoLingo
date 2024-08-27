@@ -1,34 +1,29 @@
 import { defineEventHandler, readBody, createError } from 'h3'
-import fs from 'fs/promises'
-import path from 'path'
-import { isBinaryFile } from 'isbinaryfile'
+import { Octokit } from '@octokit/rest'
+import { shouldIgnore } from '../utils/ignorePatterns'
+import { formatXml } from '../utils/xmlFormatter'
 
-const fetchContents = async (repoPath, useGitignore, useStandardIgnore, customIgnore, fileSizeLimit, gitignorePatterns, currentPath = '') => {
+const fetchContents = async (octokit, owner, repo, branch, path, useGitignore, useStandardIgnore, customIgnore, fileSizeLimit, gitignorePatterns) => {
+  const { data } = await octokit.repos.getContent({ owner, repo, path, ref: branch })
   const contents = []
-  const items = await fs.readdir(path.join(repoPath, currentPath), { withFileTypes: true })
 
-  for (const item of items) {
-    const itemPath = path.join(currentPath, item.name)
-    
-    if (shouldIgnore(itemPath, gitignorePatterns, useGitignore, useStandardIgnore, customIgnore)) continue
-
-    if (item.isDirectory()) {
+  for (const item of data) {
+    if (item.type === 'dir') {
       contents.push({
         type: 'dir',
         name: item.name,
-        path: itemPath,
-        contents: await fetchContents(repoPath, useGitignore, useStandardIgnore, customIgnore, fileSizeLimit, gitignorePatterns, itemPath)
+        path: item.path,
+        contents: await fetchContents(octokit, owner, repo, branch, item.path, useGitignore, useStandardIgnore, customIgnore, fileSizeLimit, gitignorePatterns)
       })
-    } else {
-      const fullPath = path.join(repoPath, itemPath)
-      const stats = await fs.stat(fullPath)
-      if (stats.size <= fileSizeLimit * 1024) {
-        if (await isBinaryFile(fullPath)) {
-          console.warn(`Skipping binary file: ${itemPath}`)
-          continue
+    } else if (item.type === 'file') {
+      if (item.size <= fileSizeLimit * 1024) {
+        const fileContent = await octokit.repos.getContent({ owner, repo, path: item.path, ref: branch })
+        const content = Buffer.from(fileContent.data.content, 'base64').toString('utf-8')
+        
+        const shouldBeIgnored = await shouldIgnore(item.path, gitignorePatterns, useGitignore, useStandardIgnore, customIgnore, content)
+        if (!shouldBeIgnored) {
+          contents.push({ type: 'file', name: item.name, path: item.path, content })
         }
-        const content = await fs.readFile(fullPath, 'utf-8')
-        contents.push({ type: 'file', name: item.name, path: itemPath, content })
       }
     }
   }
@@ -38,39 +33,88 @@ const fetchContents = async (repoPath, useGitignore, useStandardIgnore, customIg
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
-  const { repoUrl, useGitignore, useStandardIgnore, customIgnore, fileSizeLimit, selectedBranch, includeTree } = body
+  const { repoUrl, apiKey, useGitignore, useStandardIgnore, customIgnore, fileSizeLimit, selectedBranch, includeTree } = body
 
   try {
-    const [owner, repo] = new URL(repoUrl).pathname.split('/').filter(Boolean)
-    if (!owner || !repo) throw new Error('Invalid repository URL')
-
-    const repoPath = await cloneRepo(`https://github.com/${owner}/${repo}.git`, selectedBranch || 'HEAD')
-    const repoInfo = await getRepoInfo(repoPath)
-    
-    const branchToUse = selectedBranch || repoInfo.defaultBranch
-    if (!repoInfo.branches.includes(branchToUse)) {
-      console.warn(`Branch '${branchToUse}' not found. Using current branch: ${repoInfo.current}`)
+    // Validate the repository URL
+    if (!repoUrl) {
+      throw new Error('Repository URL is required')
     }
 
-    const gitignorePatterns = useGitignore ? await getGitignorePatterns(repoPath) : []
+    let url
+    try {
+      url = new URL(repoUrl)
+    } catch (error) {
+      throw new Error('Invalid repository URL format')
+    }
 
-    const contents = await fetchContents(repoPath, useGitignore, useStandardIgnore, customIgnore, fileSizeLimit, gitignorePatterns)
+    if (url.hostname !== 'github.com') {
+      throw new Error('URL must be a GitHub repository')
+    }
 
+    const pathParts = url.pathname.split('/').filter(Boolean)
+    if (pathParts.length < 2) {
+      throw new Error('Invalid GitHub repository URL')
+    }
+
+    const [owner, repo] = pathParts
+
+    const octokit = new Octokit({ auth: apiKey })
+
+    // Fetch repository information
+    let repoData
+    try {
+      const { data } = await octokit.repos.get({ owner, repo })
+      repoData = data
+    } catch (error) {
+      if (error.status === 404) {
+        throw new Error('Repository not found. Please check the URL and ensure you have access to this repository.')
+      }
+      throw error
+    }
+
+    // Fetch branches
+    const { data: branchesData } = await octokit.repos.listBranches({ owner, repo })
+    const branches = branchesData.map(branch => branch.name)
+
+    // Validate selected branch
+    const branchToUse = selectedBranch || repoData.default_branch
+    if (!branches.includes(branchToUse)) {
+      throw new Error(`Branch "${branchToUse}" not found in the repository`)
+    }
+
+    // Fetch .gitignore patterns
+    let gitignorePatterns = []
+    if (useGitignore) {
+      try {
+        const { data: gitignoreFile } = await octokit.repos.getContent({ owner, repo, path: '.gitignore', ref: branchToUse })
+        const gitignoreContent = Buffer.from(gitignoreFile.content, 'base64').toString('utf-8')
+        gitignorePatterns = gitignoreContent.split('\n')
+          .filter(line => line.trim() && !line.startsWith('#'))
+          .map(line => new RegExp(line.replace(/\*/g, '.*').replace(/\./g, '\\.')))
+      } catch (error) {
+        console.warn('No .gitignore file found or unable to read it')
+      }
+    }
+
+    // Fetch contents
+    const contents = await fetchContents(octokit, owner, repo, branchToUse, '', useGitignore, useStandardIgnore, customIgnore, fileSizeLimit, gitignorePatterns)
     const xmlContent = formatXml(contents, owner, repo, branchToUse, includeTree)
 
-    // Clean up: remove the temporary directory
-    await fs.rm(repoPath, { recursive: true, force: true })
+    // Fetch rate limit information
+    const { data: rateLimit } = await octokit.rateLimit.get()
 
     return {
       xmlContent,
-      repoInfo: `Repository: ${owner}/${repo} (Default branch: ${repoInfo.defaultBranch})`,
-      rateLimitInfo: 'API Rate Limit: N/A (Using local Git operations)',
-      branches: repoInfo.branches
+      repoInfo: `Repository: ${owner}/${repo} (Default branch: ${repoData.default_branch})`,
+      rateLimitInfo: `API Rate Limit: ${rateLimit.rate.remaining}/${rateLimit.rate.limit} (Resets at ${new Date(rateLimit.rate.reset * 1000).toLocaleString()})`,
+      branches
     }
   } catch (error) {
+    console.error('Error in github-repo.js:', error)
     throw createError({
-      statusCode: 500,
-      statusMessage: error.message,
+      statusCode: error.status || 500,
+      statusMessage: error.message || 'An unexpected error occurred',
     })
   }
 })

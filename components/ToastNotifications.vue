@@ -1,5 +1,5 @@
 <template>
-  <div class="fixed bottom-0 right-0 z-50 p-4 space-y-4">
+  <div class="fixed bottom-0 right-0 z-50 p-4 mb-8 space-y-4">
     <transition-group name="fade">
       <div
         v-for="toast in toasts"

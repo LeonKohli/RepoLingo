@@ -35,11 +35,32 @@
           placeholder="Enter custom ignore patterns, one per line"
         ></textarea>
       </div>
+      <div>
+        <label for="api-key" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">GitHub API Key</label>
+        <div class="relative">
+          <input 
+            v-model="localApiKey" 
+            :type="showApiKey ? 'text' : 'password'" 
+            id="api-key" 
+            class="w-full px-3 py-2 pr-10 text-gray-700 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
+            placeholder="Enter your GitHub API key"
+          />
+          <button 
+            @click="toggleApiKeyVisibility" 
+            type="button" 
+            class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-700 dark:text-gray-300"
+          >
+            <Icon :name="showApiKey ? 'uil:eye-slash' : 'uil:eye'" />
+          </button>
+        </div>
+      </div>
     </div>
   </section>
 </template>
 
 <script setup>
+import { useGithubActions } from '~/composables/useGithubState'
+
 const props = defineProps({
   useGitignore: Boolean,
   useStandardIgnore: Boolean,
@@ -48,11 +69,15 @@ const props = defineProps({
   customIgnore: String,
 })
 
+const { apiKey, setApiKey } = useGithubActions()
+
 const useGitignore = ref(props.useGitignore)
 const useStandardIgnore = ref(props.useStandardIgnore)
 const includeTree = ref(props.includeTree)
 const fileSizeLimit = ref(props.fileSizeLimit)
 const customIgnore = ref(props.customIgnore)
+const showApiKey = ref(false)
+const localApiKey = ref(apiKey.value)
 
 const emit = defineEmits(['update:useGitignore', 'update:useStandardIgnore', 'update:includeTree', 'update:fileSizeLimit', 'update:customIgnore'])
 
@@ -61,4 +86,16 @@ watch(useStandardIgnore, (newValue) => emit('update:useStandardIgnore', newValue
 watch(fileSizeLimit, (newValue) => emit('update:fileSizeLimit', newValue))
 watch(customIgnore, (newValue) => emit('update:customIgnore', newValue))
 watch(includeTree, (newValue) => emit('update:includeTree', newValue))
+
+watch(localApiKey, (newValue) => {
+  setApiKey(newValue)
+})
+
+watch(apiKey, (newValue) => {
+  localApiKey.value = newValue
+})
+
+const toggleApiKeyVisibility = () => {
+  showApiKey.value = !showApiKey.value
+}
 </script>

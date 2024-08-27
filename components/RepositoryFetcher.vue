@@ -5,19 +5,22 @@
       <div>
         <label for="repo-url" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Repository URL</label>
         <IconInput 
-          v-model="repoUrl" 
+          :modelValue="repoUrl"
+          @update:modelValue="updateRepoUrl"
           icon-name="uil:github" 
           type="url" 
           id="repo-url"
           placeholder="Enter GitHub repository URL" 
           required 
+          @input="handleRepoUrlInput"
         />
       </div>
       <!-- New branch selector -->
       <div>
         <label for="selected-branch" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Branch</label>
         <select 
-          v-model="selectedBranch" 
+          :value="selectedBranch"
+          @input="updateSelectedBranch"
           id="selected-branch" 
           class="w-full px-3 py-2 text-gray-700 bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
         >
@@ -34,51 +37,61 @@
 </template>
 
 <script setup>
+import { useGithubState, useGithubActions } from '~/composables/useGithubState'
+
 const props = defineProps({
   repoUrl: String,
   selectedBranch: String,
   branches: Array,
 })
 
-const repoUrl = ref(props.repoUrl)
-const selectedBranch = ref(props.selectedBranch)
+const emit = defineEmits(['fetch-repo', 'update:repoUrl', 'update:selectedBranch', 'update:branches'])
+
 const localBranches = ref([])
 const isFetchingBranches = ref(false)
 
-const emit = defineEmits(['fetch-repo', 'update:repoUrl', 'update:selectedBranch', 'update:branches'])
+const { fetchBranches } = useGithubActions()
+const githubState = useGithubState()
 
-watch(repoUrl, async (newValue) => {
+const updateRepoUrl = (newValue) => {
   emit('update:repoUrl', newValue)
+}
+
+const updateSelectedBranch = (event) => {
+  emit('update:selectedBranch', event.target.value)
+}
+
+watch(() => props.repoUrl, async (newValue) => {
   if (newValue) {
-    await fetchBranches(newValue)
+    await handleRepoUrlInput()
   } else {
     localBranches.value = []
     emit('update:branches', [])
   }
 })
 
-watch(selectedBranch, (newValue) => {
-  emit('update:selectedBranch', newValue)
-})
-
-const fetchBranches = async (url) => {
-  isFetchingBranches.value = true
-  try {
-    const response = await fetch('/api/github-branches', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ repoUrl: url }),
-    })
-    if (!response.ok) throw new Error('Failed to fetch branches')
-    const data = await response.json()
-    localBranches.value = data.branches
-    emit('update:branches', data.branches)
-  } catch (error) {
-    console.error('Error fetching branches:', error)
-    localBranches.value = []
-    emit('update:branches', [])
-  } finally {
-    isFetchingBranches.value = false
+const handleRepoUrlInput = () => {
+  if (props.repoUrl) {
+    clearTimeout(handleRepoUrlInput.timer)
+    handleRepoUrlInput.timer = setTimeout(async () => {
+      isFetchingBranches.value = true
+      try {
+        await fetchBranches()
+        localBranches.value = props.branches
+        emit('update:branches', props.branches)
+      } catch (error) {
+        console.error('Error fetching branches:', error)
+        localBranches.value = []
+        emit('update:branches', [])
+        
+        // Check if the error is due to API rate limit
+        if (error.message && error.message.includes('API rate limit exceeded')) {
+          githubState.value.showApiKeyModal = true
+        }
+      } finally {
+        isFetchingBranches.value = false
+      }
+    }, 300)
   }
 }
 </script>

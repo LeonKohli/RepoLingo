@@ -13,7 +13,7 @@
     "@nuxt/icon": "^1.4.5",
     "@nuxtjs/color-mode": "^3.4.2",
     "@nuxtjs/tailwindcss": "^6.12.1",
-    "@octokit/rest": "^21.0.1",
+    "@octokit/rest": "^21.0.2",
     "highlight.js": "^11.10.0",
     "isbinaryfile": "^5.0.2",
     "nuxt": "^3.12.4",

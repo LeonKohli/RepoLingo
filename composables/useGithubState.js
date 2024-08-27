@@ -1,3 +1,84 @@
+const usePersistedState = (key, defaultValue) => {
+  const state = ref(defaultValue)
+
+  if (import.meta.client) {
+    const storedValue = localStorage.getItem(key)
+    if (storedValue) {
+      state.value = JSON.parse(storedValue)
+    }
+
+    watch(state, (newValue) => {
+      localStorage.setItem(key, JSON.stringify(newValue))
+    }, { deep: true })
+  }
+
+  return state
+}
+
+const encryptApiKey = async (apiKey) => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(apiKey);
+  const key = await crypto.subtle.generateKey(
+    { name: 'AES-GCM', length: 256 },
+    true,
+    ['encrypt', 'decrypt']
+  );
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encryptedData = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv: iv },
+    key,
+    data
+  );
+  const exportedKey = await crypto.subtle.exportKey('raw', key);
+  return {
+    encryptedData: Array.from(new Uint8Array(encryptedData)),
+    iv: Array.from(iv),
+    key: Array.from(new Uint8Array(exportedKey))
+  };
+};
+
+const decryptApiKey = async (encryptedObj) => {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new Uint8Array(encryptedObj.key),
+    { name: 'AES-GCM', length: 256 },
+    true,
+    ['encrypt', 'decrypt']
+  );
+  const decryptedData = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: new Uint8Array(encryptedObj.iv) },
+    key,
+    new Uint8Array(encryptedObj.encryptedData)
+  );
+  const decoder = new TextDecoder();
+  return decoder.decode(decryptedData);
+};
+
+const useSecurePersistedState = (key, defaultValue) => {
+  const state = ref(defaultValue);
+
+  if (import.meta.client) {
+    const storedValue = localStorage.getItem(key);
+    if (storedValue) {
+      const decryptedValue = JSON.parse(storedValue);
+      decryptApiKey(decryptedValue).then(decrypted => {
+        state.value = decrypted;
+      });
+    }
+
+    watch(state, async (newValue) => {
+      if (newValue) {
+        const encryptedValue = await encryptApiKey(newValue);
+        localStorage.setItem(key, JSON.stringify(encryptedValue));
+      } else {
+        localStorage.removeItem(key);
+      }
+    }, { deep: true });
+  }
+
+  return state;
+};
+
 export const useGithubState = () => useState('github', () => ({
   repoUrl: '',
   apiKey: '',
@@ -12,20 +93,28 @@ export const useGithubState = () => useState('github', () => ({
   rateLimitInfo: null,
   fileSizeLimit: 1000,
   branches: [],
-  selectedBranch: ''
+  selectedBranch: '',
+  showApiKeyModal: false,
 }))
 
 export const useGithubActions = () => {
   const state = useGithubState()
+  const apiKey = useSecurePersistedState('github-api-key', '')
 
   const fetchRepo = async () => {
+    if (!state.value.repoUrl) {
+      state.value.error = 'Please provide a repository URL'
+      return
+    }
+
     state.value.loading = true
     state.value.error = null
     try {
-      const { data, error } = await useFetch('/api/github-repo', {
+      const data = await $fetch('/api/github-repo', {
         method: 'POST',
         body: {
           repoUrl: state.value.repoUrl,
+          apiKey: apiKey.value,
           useGitignore: state.value.useGitignore,
           useStandardIgnore: state.value.useStandardIgnore,
           customIgnore: state.value.customIgnore,
@@ -35,23 +124,59 @@ export const useGithubActions = () => {
         }
       })
 
-      if (error.value) {
-        throw new Error(error.value.data?.statusMessage || 'An error occurred')
-      }
+      state.value.output = data.xmlContent
+      state.value.repoInfo = data.repoInfo
+      state.value.branches = data.branches
+      state.value.rateLimitInfo = data.rateLimitInfo
 
-      state.value.output = data.value.xmlContent
-      state.value.repoInfo = data.value.repoInfo
-      state.value.branches = data.value.branches
-      
-      // Reset selected branch if it's not in the list of available branches
-      if (state.value.selectedBranch && !data.value.branches.includes(state.value.selectedBranch)) {
+      if (state.value.selectedBranch && !data.branches.includes(state.value.selectedBranch)) {
         state.value.selectedBranch = ''
       }
     } catch (error) {
-      state.value.error = error.message
+      if (error.statusCode === 403 && error.statusMessage.includes('API rate limit exceeded')) {
+        state.value.showApiKeyModal = true
+        state.value.error = 'API rate limit exceeded'
+      } else {
+        state.value.error = error.message || 'An error occurred'
+      }
     } finally {
       state.value.loading = false
     }
+  }
+
+  const fetchBranches = async () => {
+    if (!state.value.repoUrl || !isValidGithubUrl(state.value.repoUrl)) {
+      state.value.error = 'Please provide a valid repository URL'
+      return
+    }
+
+    state.value.loading = true
+    state.value.error = null
+    try {
+      const data = await $fetch('/api/github-branches', {
+        method: 'POST',
+        body: {
+          repoUrl: state.value.repoUrl,
+          apiKey: apiKey.value,
+        }
+      })
+
+      state.value.branches = data.branches
+    } catch (error) {
+      if (error.statusCode === 403 && error.statusMessage.includes('API rate limit exceeded')) {
+        state.value.showApiKeyModal = true
+        state.value.error = 'API rate limit exceeded'
+      } else {
+        state.value.error = error.message || 'An error occurred'
+      }
+    } finally {
+      state.value.loading = false
+    }
+  }
+
+  const isValidGithubUrl = (url) => {
+    const githubUrlPattern = /^https?:\/\/(www\.)?github\.com\/[\w-]+\/[\w.-]+$/;
+    return githubUrlPattern.test(url);
   }
 
   const resetState = () => {
@@ -90,10 +215,17 @@ export const useGithubActions = () => {
     return { success: true, message: 'XML downloaded successfully' }
   }
 
+  const setApiKey = (newApiKey) => {
+    apiKey.value = newApiKey
+  }
+
   return {
     fetchRepo,
+    fetchBranches,
     resetState,
     copyToClipboard,
-    downloadXml
+    downloadXml,
+    setApiKey,
+    apiKey,
   }
 }
