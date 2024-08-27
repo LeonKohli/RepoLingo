@@ -7,9 +7,9 @@
         <p class="mt-4 text-sm text-gray-400">Fetching repository...</p>
       </div>
       <div v-else-if="output" class="flex flex-col flex-grow w-full space-y-4 transition-all duration-300">
-        <div class="flex-grow overflow-auto" style="max-height: calc(100vh - 15rem);">
+        <div class="flex-grow overflow-hidden rounded-lg" style="max-height: calc(100vh - 12rem);">
           <pre 
-            class="w-full px-3 py-2 text-sm text-gray-800 whitespace-pre-wrap bg-gray-100 border border-gray-300 rounded-lg focus:outline-none dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
+            class="w-full h-full px-3 py-2 overflow-auto text-sm text-gray-800 whitespace-pre-wrap bg-gray-100 border border-gray-300 rounded-lg focus:outline-none dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
             tabindex="0"
             @keydown.ctrl.a.prevent="selectAllOutput"
             ref="outputContent"

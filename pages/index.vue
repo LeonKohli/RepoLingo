@@ -1,9 +1,10 @@
 <template>
   <div class="min-h-screen text-white transition-colors duration-300 bg-gradient-to-br from-[#0f172a] to-[#1e293b]">
     <SeoManager :faqSchema="faqSchema" />
-    <main class="container px-4 py-6 mx-auto max-w-7xl">
+    <main class="container max-w-full px-4 py-2">
       <div class="flex flex-col gap-8 lg:flex-row" style="min-height: calc(100vh - 6rem);">
-        <div class="w-full space-y-8 lg:w-1/2">
+        <!-- Left column: RepositoryFetcher and Settings -->
+        <div class="w-full space-y-8 lg:w-1/3">
           <RepositoryFetcher
             v-model:repoUrl="githubState.repoUrl"
             v-model:selectedBranch="githubState.selectedBranch"
@@ -21,13 +22,14 @@
           />
         </div>
 
-        <div class="w-full lg:w-1/2 lg:flex lg:flex-col">
+        <!-- Right column: Output -->
+        <div class="w-full lg:w-2/3">
           <Output 
             :loading="githubState.loading" 
             :output="githubState.output"
             @copy="copyToClipboardWithToast" 
             @download="downloadXmlWithToast" 
-            class="flex-grow h-full"
+            class="h-full"
           />
         </div>
       </div>
