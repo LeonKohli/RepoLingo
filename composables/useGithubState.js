@@ -1,84 +1,3 @@
-const usePersistedState = (key, defaultValue) => {
-  const state = ref(defaultValue)
-
-  if (import.meta.client) {
-    const storedValue = localStorage.getItem(key)
-    if (storedValue) {
-      state.value = JSON.parse(storedValue)
-    }
-
-    watch(state, (newValue) => {
-      localStorage.setItem(key, JSON.stringify(newValue))
-    }, { deep: true })
-  }
-
-  return state
-}
-
-const encryptApiKey = async (apiKey) => {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(apiKey);
-  const key = await crypto.subtle.generateKey(
-    { name: 'AES-GCM', length: 256 },
-    true,
-    ['encrypt', 'decrypt']
-  );
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const encryptedData = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv: iv },
-    key,
-    data
-  );
-  const exportedKey = await crypto.subtle.exportKey('raw', key);
-  return {
-    encryptedData: Array.from(new Uint8Array(encryptedData)),
-    iv: Array.from(iv),
-    key: Array.from(new Uint8Array(exportedKey))
-  };
-};
-
-const decryptApiKey = async (encryptedObj) => {
-  const key = await crypto.subtle.importKey(
-    'raw',
-    new Uint8Array(encryptedObj.key),
-    { name: 'AES-GCM', length: 256 },
-    true,
-    ['encrypt', 'decrypt']
-  );
-  const decryptedData = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv: new Uint8Array(encryptedObj.iv) },
-    key,
-    new Uint8Array(encryptedObj.encryptedData)
-  );
-  const decoder = new TextDecoder();
-  return decoder.decode(decryptedData);
-};
-
-const useSecurePersistedState = (key, defaultValue) => {
-  const state = ref(defaultValue);
-
-  if (import.meta.client) {
-    const storedValue = localStorage.getItem(key);
-    if (storedValue) {
-      const decryptedValue = JSON.parse(storedValue);
-      decryptApiKey(decryptedValue).then(decrypted => {
-        state.value = decrypted;
-      });
-    }
-
-    watch(state, async (newValue) => {
-      if (newValue) {
-        const encryptedValue = await encryptApiKey(newValue);
-        localStorage.setItem(key, JSON.stringify(encryptedValue));
-      } else {
-        localStorage.removeItem(key);
-      }
-    }, { deep: true });
-  }
-
-  return state;
-};
-
 export const useGithubState = () => useState('github', () => ({
   repoUrl: '',
   apiKey: '',
@@ -100,7 +19,8 @@ export const useGithubState = () => useState('github', () => ({
 
 export const useGithubActions = () => {
   const state = useGithubState()
-  const apiKey = useSecurePersistedState('github-api-key', '')
+  const apiKey = useApiKeyState()
+
 
   const fetchRepo = async () => {
     if (!state.value.repoUrl) {
@@ -216,17 +136,12 @@ export const useGithubActions = () => {
     return { success: true, message: 'XML downloaded successfully' }
   }
 
-  const setApiKey = (newApiKey) => {
-    apiKey.value = newApiKey
-  }
-
   return {
     fetchRepo,
     fetchBranches,
     resetState,
     copyToClipboard,
     downloadXml,
-    setApiKey,
     apiKey,
   }
 }
