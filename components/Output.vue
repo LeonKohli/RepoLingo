@@ -23,20 +23,16 @@
 
       <div class="flex items-center justify-between mt-4">
         <div class="flex space-x-4">
-          <ClientOnly>
-            <button @click="copyToClipboard"
-              class="px-4 py-2 text-gray-800 transition-all duration-300 border border-white rounded-lg bg-primary hover:bg-primary-light focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 active:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed border-opacity-20"
-              :disabled="isCopyDisabled">
-              <Icon :name="copyingState ? 'uil:check' : 'uil:copy'" class="mr-2" />
-              {{ copyingState ? 'Copied!' : 'Copy' }}
-            </button>
-            <button @click="downloadXml"
-              class="px-4 py-2 text-white transition-all duration-300 bg-gray-600 border border-gray-500 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 active:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-              :disabled="isDownloadDisabled">
-              <Icon :name="downloadingState ? 'uil:check' : 'uil:download-alt'" class="mr-2" />
-              {{ downloadingState ? 'Downloaded!' : 'Download' }}
-            </button>
-          </ClientOnly>
+          <button @click="copyToClipboard"
+            class="px-4 py-2 text-gray-800 transition-all duration-300 border border-white rounded-lg bg-primary hover:bg-primary-light focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 active:bg-primary-dark border-opacity-20">
+            <Icon :name="copyingState ? 'uil:check' : 'uil:copy'" class="mr-2" />
+            {{ copyingState ? 'Copied!' : 'Copy' }}
+          </button>
+          <button @click="downloadXml"
+            class="px-4 py-2 text-white transition-all duration-300 bg-gray-600 border border-gray-500 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 active:bg-gray-800">
+            <Icon :name="downloadingState ? 'uil:check' : 'uil:download-alt'" class="mr-2" />
+            {{ downloadingState ? 'Downloaded!' : 'Download' }}
+          </button>
         </div>
         <div v-if="output" class="text-sm text-gray-600 dark:text-gray-400">
           Estimated tokens: {{ tokenCount }}
@@ -65,16 +61,12 @@ const copyingState = ref(false)
 const downloadingState = ref(false)
 const outputContent = ref(null)
 
-const isCopyDisabled = computed(() => copyingState.value || !props.output)
-const isDownloadDisabled = computed(() => downloadingState.value || !props.output)
-
 const tokenCount = computed(() => {
   if (!props.output) return 0
   return encode(props.output).length
 })
 
 const copyToClipboard = async () => {
-  if (isCopyDisabled.value) return
   copyingState.value = true
   emit('copy')
   setTimeout(() => {
@@ -83,7 +75,6 @@ const copyToClipboard = async () => {
 }
 
 const downloadXml = async () => {
-  if (isDownloadDisabled.value) return
   downloadingState.value = true
   emit('download')
   setTimeout(() => {
