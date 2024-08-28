@@ -1,9 +1,11 @@
 <template>
   <div class="min-h-screen text-white transition-colors duration-300 bg-gradient-to-br from-[#0f172a] to-[#1e293b]">
-    <SeoManager :faqSchema="faqSchema" />
+    <ClientOnly>
+      <SeoManager :faqSchema="faqSchema" />
+    </ClientOnly>
     <main class="container max-w-full px-4 py-2">
+      <!-- Main content -->
       <div class="flex flex-col gap-8 lg:flex-row" style="min-height: calc(100vh - 6rem);">
-        <!-- Left column: RepositoryFetcher and Settings -->
         <div class="w-full space-y-8 lg:w-1/3">
           <RepositoryFetcher v-model:repoUrl="githubState.repoUrl" v-model:selectedBranch="githubState.selectedBranch"
             v-model:branches="githubState.branches" @fetch-repo="fetchRepoWithToast" ref="repoFetcher" />
@@ -12,7 +14,6 @@
             v-model:fileSizeLimit="githubState.fileSizeLimit" v-model:customIgnore="githubState.customIgnore"
             v-model:apiKey="githubState.apiKey" />
         </div>
-        <!-- Right column: Output -->
         <div class="w-full lg:w-2/3">
           <Output :loading="githubState.loading" :output="githubState.output" @copy="copyToClipboardWithToast"
             @download="downloadXmlWithToast" class="h-full" />
@@ -20,8 +21,9 @@
       </div>
     </main>
     <ToastNotifications :toasts="toasts" />
-    <ApiKeyModal v-model:show="githubState.showApiKeyModal" @save="handleSaveApiKey" />
-    <!-- SEO content with spacing -->
+    <ClientOnly>
+      <ApiKeyModal v-model:show="githubState.showApiKeyModal" @save="handleSaveApiKey" />
+    </ClientOnly>
     <div class="mt-32 ">
       <div class="container max-w-3xl px-4 py-16 mx-auto">
         <section class="mb-16 text-center">
