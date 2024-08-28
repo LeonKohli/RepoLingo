@@ -26,7 +26,6 @@
   </section>
 </template>
 <script setup>
-import { ref, watch } from 'vue'
 const props = defineProps({
   repoUrl: String,
   selectedBranch: String,
@@ -64,10 +63,6 @@ const handleRepoUrlInput = () => {
 const fetchBranches = async () => {
   isFetchingBranches.value = true
   try {
-    // Check if API key is present
-    if (!apiKey.value) {
-      throw new Error('API key is missing')
-    }
     const { fetchBranches } = useGithubActions()
     await fetchBranches()
     localBranches.value = props.branches
