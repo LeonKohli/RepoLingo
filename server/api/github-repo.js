@@ -19,7 +19,6 @@ const fetchContents = async (octokit, owner, repo, branch, path, useGitignore, u
       if (item.size <= fileSizeLimit * 1024) {
         const fileContent = await octokit.repos.getContent({ owner, repo, path: item.path, ref: branch })
         const content = Buffer.from(fileContent.data.content, 'base64').toString('utf-8')
-        
         const shouldBeIgnored = await shouldIgnore(item.path, gitignorePatterns, useGitignore, useStandardIgnore, customIgnore, content)
         if (!shouldBeIgnored) {
           contents.push({ type: 'file', name: item.name, path: item.path, content })
@@ -58,7 +57,6 @@ export default defineEventHandler(async (event) => {
     }
 
     const [owner, repo] = pathParts
-
     const octokit = new Octokit({ auth: apiKey })
 
     // Fetch repository information

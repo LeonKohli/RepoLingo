@@ -1,6 +1,5 @@
 export const useGithubState = () => useState('github', () => ({
   repoUrl: '',
-  apiKey: '',
   useGitignore: true,
   useStandardIgnore: true,
   includeTree: false,
@@ -19,8 +18,7 @@ export const useGithubState = () => useState('github', () => ({
 
 export const useGithubActions = () => {
   const state = useGithubState()
-  const apiKey = useApiKeyState()
-
+  const { apiKey, updateApiKey } = useApiKeyState()
 
   const fetchRepo = async () => {
     if (!state.value.repoUrl) {
@@ -30,6 +28,7 @@ export const useGithubActions = () => {
 
     state.value.loading = true
     state.value.error = null
+
     try {
       const data = await $fetch('/api/github-repo', {
         method: 'POST',
@@ -73,6 +72,7 @@ export const useGithubActions = () => {
 
     state.value.loading = true
     state.value.error = null
+
     try {
       const data = await $fetch('/api/github-branches', {
         method: 'POST',
@@ -115,6 +115,7 @@ export const useGithubActions = () => {
     if (!state.value.output) {
       return { success: false, message: 'No content to copy' }
     }
+
     return navigator.clipboard.writeText(state.value.output)
       .then(() => ({ success: true, message: 'Copied to clipboard!' }))
       .catch(() => ({ success: false, message: 'Failed to copy' }))
@@ -124,6 +125,7 @@ export const useGithubActions = () => {
     if (!state.value.output) {
       return { success: false, message: 'No content to download' }
     }
+
     const blob = new Blob([state.value.output], {type: 'text/xml'})
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -133,6 +135,7 @@ export const useGithubActions = () => {
     a.download = `${repoName}_llm_context_${timestamp}.xml`
     a.click()
     URL.revokeObjectURL(url)
+
     return { success: true, message: 'XML downloaded successfully' }
   }
 
@@ -143,5 +146,6 @@ export const useGithubActions = () => {
     copyToClipboard,
     downloadXml,
     apiKey,
+    updateApiKey
   }
 }

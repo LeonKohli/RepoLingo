@@ -29,8 +29,7 @@
       <div>
         <label for="api-key" class="block mb-2 text-sm font-medium text-gray-300">GitHub API Key</label>
         <div class="relative">
-          <input :value="apiKey" @input="updateApiKey($event.target.value)" :type="showApiKey ? 'text' : 'password'"
-            id="api-key"
+          <input :value="apiKey" @input="handleApiKeyInput" :type="showApiKey ? 'text' : 'password'" id="api-key"
             class="w-full px-3 py-2 pr-10 text-sm text-gray-800 transition-all duration-300 ease-in-out bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
             placeholder="Enter your GitHub API key" />
           <button @click="toggleApiKeyVisibility" type="button"
@@ -52,8 +51,7 @@ const props = defineProps({
   customIgnore: String,
 })
 
-const apiKey = useApiKeyState()
-
+const { apiKey, updateApiKey } = useApiKeyState()
 const useGitignore = ref(props.useGitignore)
 const useStandardIgnore = ref(props.useStandardIgnore)
 const includeTree = ref(props.includeTree)
@@ -73,4 +71,7 @@ const toggleApiKeyVisibility = () => {
   showApiKey.value = !showApiKey.value
 }
 
+const handleApiKeyInput = (event) => {
+  updateApiKey(event.target.value)
+}
 </script>

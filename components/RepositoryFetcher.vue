@@ -25,33 +25,26 @@
     </form>
   </section>
 </template>
-
 <script setup>
-
+import { ref, watch } from 'vue'
 const props = defineProps({
   repoUrl: String,
   selectedBranch: String,
   branches: Array,
 })
-
 const emit = defineEmits(['fetch-repo', 'update:repoUrl', 'update:selectedBranch', 'update:branches'])
-
 const localBranches = ref([])
 const isFetchingBranches = ref(false)
 const localSelectedBranch = ref(props.selectedBranch)
-
-const { fetchBranches, apiKey } = useGithubActions()
+const { apiKey } = useGithubActions()
 const githubState = useGithubState()
-
 const updateRepoUrl = (newValue) => {
   emit('update:repoUrl', newValue)
   handleRepoUrlInput()
 }
-
 watch(localSelectedBranch, (newValue) => {
   emit('update:selectedBranch', newValue)
 })
-
 watch(() => props.repoUrl, async (newValue) => {
   if (newValue) {
     await handleRepoUrlInput()
@@ -60,34 +53,37 @@ watch(() => props.repoUrl, async (newValue) => {
     emit('update:branches', [])
   }
 })
-
 const handleRepoUrlInput = () => {
   if (props.repoUrl) {
     clearTimeout(handleRepoUrlInput.timer)
     handleRepoUrlInput.timer = setTimeout(async () => {
-      isFetchingBranches.value = true
-      try {
-        // Check if API key is present
-        if (!apiKey.value) {
-          throw new Error('API key is missing')
-        }
-
-        await fetchBranches()
-        localBranches.value = props.branches
-        emit('update:branches', props.branches)
-      } catch (error) {
-        console.error('Error fetching branches:', error)
-        localBranches.value = []
-        emit('update:branches', [])
-
-        // Check if the error is due to API rate limit or missing API key
-        if (error.message && (error.message.includes('API rate limit exceeded') || error.message.includes('API key is missing'))) {
-          githubState.value.showApiKeyModal = true
-        }
-      } finally {
-        isFetchingBranches.value = false
-      }
+      await fetchBranches()
     }, 300)
   }
 }
+const fetchBranches = async () => {
+  isFetchingBranches.value = true
+  try {
+    // Check if API key is present
+    if (!apiKey.value) {
+      throw new Error('API key is missing')
+    }
+    const { fetchBranches } = useGithubActions()
+    await fetchBranches()
+    localBranches.value = props.branches
+    emit('update:branches', props.branches)
+  } catch (error) {
+    console.error('Error fetching branches:', error)
+    localBranches.value = []
+    emit('update:branches', [])
+    // Check if the error is due to API rate limit or missing API key
+    if (error.message && (error.message.includes('API rate limit exceeded') || error.message.includes('API key is missing'))) {
+      githubState.value.showApiKeyModal = true
+    }
+  } finally {
+    isFetchingBranches.value = false
+  }
+}
+// Expose the fetchBranches method to be called from the parent component
+defineExpose({ fetchBranches })
 </script>

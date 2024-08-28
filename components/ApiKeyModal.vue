@@ -11,7 +11,7 @@
           class="inline-block mb-4 text-primary hover:underline">
           Get a token here
         </a>
-        <input v-model="apiKey" type="password" placeholder="Enter your GitHub API token"
+        <input v-model="localApiKey" type="password" placeholder="Enter your GitHub API token"
           class="w-full px-3 py-2 mb-4 text-gray-800 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700" />
         <div class="flex justify-end">
           <button @click="saveApiKey"
@@ -30,11 +30,12 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:show', 'save'])
-
-const apiKey = useApiKeyState()
+const { apiKey, updateApiKey } = useApiKeyState()
+const localApiKey = ref(apiKey.value)
 
 const saveApiKey = () => {
-  emit('save', apiKey.value)
+  updateApiKey(localApiKey.value)
+  emit('save', localApiKey.value)
   emit('update:show', false)
 }
 </script>

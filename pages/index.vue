@@ -6,14 +6,12 @@
         <!-- Left column: RepositoryFetcher and Settings -->
         <div class="w-full space-y-8 lg:w-1/3">
           <RepositoryFetcher v-model:repoUrl="githubState.repoUrl" v-model:selectedBranch="githubState.selectedBranch"
-            v-model:branches="githubState.branches" @fetch-repo="fetchRepoWithToast" />
-
+            v-model:branches="githubState.branches" @fetch-repo="fetchRepoWithToast" ref="repoFetcher" />
           <Settings v-model:useGitignore="githubState.useGitignore"
             v-model:useStandardIgnore="githubState.useStandardIgnore" v-model:includeTree="githubState.includeTree"
             v-model:fileSizeLimit="githubState.fileSizeLimit" v-model:customIgnore="githubState.customIgnore"
             v-model:apiKey="githubState.apiKey" />
         </div>
-
         <!-- Right column: Output -->
         <div class="w-full lg:w-2/3">
           <Output :loading="githubState.loading" :output="githubState.output" @copy="copyToClipboardWithToast"
@@ -21,16 +19,13 @@
         </div>
       </div>
     </main>
-
     <ToastNotifications :toasts="toasts" />
-    <ApiKeyModal v-model:show="githubState.showApiKeyModal" @save="saveApiKey" />
-
+    <ApiKeyModal v-model:show="githubState.showApiKeyModal" @save="handleSaveApiKey" />
     <!-- SEO content with spacing -->
     <div class="mt-32 ">
       <div class="container max-w-3xl px-4 py-16 mx-auto">
         <section class="mb-16 text-center">
           <h1 class="mb-8 text-4xl font-bold text-primary">GitHub to LLM Context Converter</h1>
-
           <h2 class="mb-4 text-2xl font-semibold text-white">Enhance Your AI Interactions</h2>
           <p class="mb-4 text-gray-300">
             Our GitHub to LLM Context Converter is a powerful tool designed to transform GitHub repositories into
@@ -43,7 +38,6 @@
             into a format that's perfect for in-depth discussions about your projects with AI assistants.
           </p>
         </section>
-
         <section class="mb-16">
           <h2 class="mb-6 text-3xl font-semibold text-center text-primary">Frequently Asked Questions</h2>
           <div class="space-y-4">
@@ -62,16 +56,16 @@
               <pre
                 class="w-full px-3 py-2 mt-2 text-sm text-gray-800 whitespace-pre-wrap bg-gray-100 border border-gray-300 rounded-lg focus:outline-none dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
                 tabindex="0"><code>&lt;llm_context&gt;
-  &lt;repository&gt;
-    &lt;metadata&gt;...&lt;/metadata&gt;
-    &lt;tree_structure&gt;...&lt;/tree_structure&gt;
-    &lt;contents&gt;
-      &lt;file&gt;
-        &lt;content&gt;&lt;![CDATA[...]]&gt;&lt;/content&gt;
-      &lt;/file&gt;
-      ...
-    &lt;/contents&gt;
-  &lt;/repository&gt;
+&lt;repository&gt;
+&lt;metadata&gt;...&lt;/metadata&gt;
+&lt;tree_structure&gt;...&lt;/tree_structure&gt;
+&lt;contents&gt;
+&lt;file&gt;
+&lt;content&gt;&lt;![CDATA[...]]&gt;&lt;/content&gt;
+&lt;/file&gt;
+...
+&lt;/contents&gt;
+&lt;/repository&gt;
 &lt;/llm_context&gt;</code></pre>
             </details>
             <details class="p-4 rounded-lg bg-background-light">
@@ -102,14 +96,12 @@
           </div>
         </section>
       </div>
-
       <footer class="py-6 text-center text-gray-400 ">
         <p>&copy; {{ new Date().getFullYear() }} GitHub to LLM Context Converter. All rights reserved.</p>
       </footer>
     </div>
   </div>
 </template>
-
 <script setup>
 useSeoMeta({
   ogImage: '/og-image-1200x630.png',
@@ -118,7 +110,6 @@ useSeoMeta({
   twitterImage: '/og-image-1200x630.png',
   twitterCard: 'summary_large_image'
 })
-
 useHead({
   link: [
     {
@@ -128,13 +119,10 @@ useHead({
     }
   ]
 })
-
 const githubState = useGithubState()
 const { fetchRepo, fetchBranches, resetState, copyToClipboard, downloadXml } = useGithubActions()
-
 const toasts = ref([])
 let toastId = 0
-
 const showToast = (message, type = 'info') => {
   const id = toastId++
   toasts.value.push({ id, message, type })
@@ -142,7 +130,6 @@ const showToast = (message, type = 'info') => {
     toasts.value = toasts.value.filter(t => t.id !== id)
   }, 3000)
 }
-
 const fetchRepoWithToast = async () => {
   try {
     await fetchRepo()
@@ -157,7 +144,6 @@ const fetchRepoWithToast = async () => {
     showToast(customErrorMessage, 'error')
   }
 }
-
 const getCustomErrorMessage = (errorMessage) => {
   if (errorMessage.includes('Repository not found') || errorMessage.includes('not found')) {
     return "Oops! We couldn't find that repository. Double-check the URL and try again."
@@ -168,21 +154,27 @@ const getCustomErrorMessage = (errorMessage) => {
   if (errorMessage.includes('Network Error')) {
     return "Looks like the internet gremlins are at it again. Check your connection and give it another shot."
   }
+  if (errorMessage.includes('Bad credentials')) {
+    return "Uh-oh! It seems your GitHub API key is invalid. Please check your settings and try again with a valid API key."
+  }
   // Add more custom error messages as needed
   return "Something went wrong. Let's give it another try!"
 }
-
 const copyToClipboardWithToast = async () => {
   const result = await copyToClipboard()
   showToast(result.message, result.success ? 'success' : 'error')
 }
-
 const downloadXmlWithToast = () => {
   const result = downloadXml()
   showToast(result.message, result.success ? 'success' : 'error')
 }
-
-
+const handleSaveApiKey = async (newApiKey) => {
+  githubState.value.apiKey = newApiKey
+  if (repoFetcher.value && githubState.value.repoUrl) {
+    await repoFetcher.value.fetchBranches()
+  }
+  fetchRepoWithToast()
+}
 const faqSchema = [
   {
     "@type": "Question",
@@ -225,7 +217,7 @@ const faqSchema = [
     }
   }
 ]
-
+const repoFetcher = ref(null)
 onUnmounted(() => {
   resetState()
 })
