@@ -11,23 +11,24 @@
       </span>
       <Icon name="uil:angle-down" class="absolute transform -translate-y-1/2 right-3 top-1/2" />
     </button>
-    <transition name="fade">
-      <ul v-if="isOpen && !loading"
-        class="absolute z-50 w-full mt-1 overflow-auto text-sm bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 dark:bg-gray-800 dark:border-gray-700">
-        <transition-group name="list">
-          <li v-for="option in options" :key="option" @click="selectOption(option)"
-            class="px-3 py-2 transition-colors duration-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700">
-            {{ option }}
-          </li>
-        </transition-group>
-      </ul>
-    </transition>
+    <Teleport to="body">
+      <transition name="fade">
+        <ul v-if="isOpen && !loading"
+          class="fixed z-[9999] mt-1 overflow-auto text-sm bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 dark:bg-gray-800 dark:border-gray-700 dropdown-menu"
+          :style="dropdownStyle">
+          <transition-group name="list">
+            <li v-for="option in options" :key="option" @click="selectOption(option)"
+              class="px-3 py-2 transition-colors duration-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700">
+              {{ option }}
+            </li>
+          </transition-group>
+        </ul>
+      </transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
-
 const props = defineProps({
   modelValue: String,
   options: Array,
@@ -50,8 +51,26 @@ watch(() => props.modelValue, (newValue) => {
   selectedOption.value = newValue
 })
 
+const dropdownRef = ref(null)
+const buttonRef = ref(null)
+
+const dropdownStyle = computed(() => {
+  if (!buttonRef.value) return {}
+  const rect = buttonRef.value.getBoundingClientRect()
+  return {
+    top: `${rect.bottom}px`,
+    left: `${rect.left}px`,
+    width: `${rect.width}px`
+  }
+})
+
 const toggleDropdown = () => {
   isOpen.value = !isOpen.value
+  if (isOpen.value) {
+    nextTick(() => {
+      buttonRef.value = document.activeElement
+    })
+  }
 }
 
 const selectOption = (option) => {
@@ -96,5 +115,11 @@ onUnmounted(() => {
 .list-leave-to {
   opacity: 0;
   transform: translateY(-10px);
+}
+
+.dropdown-menu {
+  position: fixed;
+  z-index: 9999;
+  /* Ensure it's above the blur effect */
 }
 </style>
