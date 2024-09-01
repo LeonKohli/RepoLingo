@@ -31,75 +31,99 @@
           <h2 class="mb-4 text-2xl font-semibold text-gray-800 dark:text-white">Enhance Your AI Interactions</h2>
           <p class="mb-4 text-gray-600 dark:text-gray-300">
             Our GitHub to LLM Context Converter is a powerful tool designed to transform GitHub repositories into
-            LLM-friendly context.
-            This innovative solution helps users provide comprehensive project information to AI models like ChatGPT,
+            LLM-friendly context. This innovative solution helps users provide comprehensive project information to AI models like ChatGPT,
             Claude, or any other LLM, enabling more effective communication and assistance.
           </p>
-          <p class="text-gray-600 dark:text-gray-300">
+          <p class="mb-6 text-gray-600 dark:text-gray-300">
             With customizable settings and efficient processing, you can easily convert complex repository structures
             into a format that's perfect for in-depth discussions about your projects with AI assistants.
           </p>
+          <a href="https://github.com/LeonKohli/github-to-llm-context-converter" target="_blank" rel="noopener noreferrer" 
+             class="inline-flex items-center px-6 py-3 text-white transition-colors duration-300 rounded-lg bg-primary hover:bg-primary-dark">
+            <Icon name="mdi:github" class="w-6 h-6 mr-2" />
+            View on GitHub
+          </a>
+        </section>
+        <section class="mb-16">
+          <h2 class="mb-6 text-3xl font-semibold text-center text-primary">Key Features</h2>
+          <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div class="p-6 bg-white rounded-lg shadow-md dark:bg-background-light">
+              <Icon name="mdi:file-tree" class="w-12 h-12 mb-4 text-primary" />
+              <h3 class="mb-2 text-xl font-semibold">Repository Structure</h3>
+              <p class="text-gray-600 dark:text-gray-300">Preserves the original file structure for easy navigation and understanding.</p>
+            </div>
+            <div class="p-6 bg-white rounded-lg shadow-md dark:bg-background-light">
+              <Icon name="mdi:cog" class="w-12 h-12 mb-4 text-primary" />
+              <h3 class="mb-2 text-xl font-semibold">Customizable Settings</h3>
+              <p class="text-gray-600 dark:text-gray-300">Tailor the output with ignore patterns, file size limits, and more.</p>
+            </div>
+            <div class="p-6 bg-white rounded-lg shadow-md dark:bg-background-light">
+              <Icon name="mdi:xml" class="w-12 h-12 mb-4 text-primary" />
+              <h3 class="mb-2 text-xl font-semibold">XML Output</h3>
+              <p class="text-gray-600 dark:text-gray-300">Generates a structured XML format that's easily parsed by LLMs.</p>
+            </div>
+            <div class="p-6 bg-white rounded-lg shadow-md dark:bg-background-light">
+              <Icon name="mdi:shield-lock" class="w-12 h-12 mb-4 text-primary" />
+              <h3 class="mb-2 text-xl font-semibold">Secure Processing</h3>
+              <p class="text-gray-600 dark:text-gray-300">Your GitHub API key is securely stored and used only client-side.</p>
+            </div>
+          </div>
         </section>
         <section class="mb-16">
           <h2 class="mb-6 text-3xl font-semibold text-center text-primary">Frequently Asked Questions</h2>
           <div class="space-y-4">
-            <details class="p-4 bg-white rounded-lg dark:bg-background-light">
-              <summary class="text-xl font-medium text-gray-800 cursor-pointer dark:text-white hover:text-primary">What is the GitHub to
-                LLM Context Converter used for?</summary>
-              <p class="mt-2 text-gray-600 dark:text-gray-300">This tool converts GitHub repositories into a format that's easily
-                understood by Large Language Models (LLMs) like ChatGPT or Claude. It allows you to provide
-                comprehensive context about your project to an AI, enabling more informed discussions, code reviews, or
-                assistance with your work.</p>
-            </details>
-            <details class="p-4 bg-white rounded-lg dark:bg-background-light">
-              <summary class="text-xl font-medium text-gray-800 cursor-pointer dark:text-white hover:text-primary">How does the XML output
-                structure look?</summary>
-              <p class="mt-2 text-gray-600 dark:text-gray-300">The XML output follows this general structure:</p>
-              <pre
-                class="w-full px-3 py-2 mt-2 text-sm text-gray-800 whitespace-pre-wrap bg-gray-100 border border-gray-300 rounded-lg focus:outline-none dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
-                tabindex="0"><code>&lt;llm_context&gt;
-&lt;repository&gt;
-&lt;metadata&gt;...&lt;/metadata&gt;
-&lt;tree_structure&gt;...&lt;/tree_structure&gt;
-&lt;contents&gt;
-&lt;file&gt;
-&lt;content&gt;&lt;![CDATA[...]]&gt;&lt;/content&gt;
-&lt;/file&gt;
-...
-&lt;/contents&gt;
-&lt;/repository&gt;
-&lt;/llm_context&gt;</code></pre>
-            </details>
-            <details class="p-4 bg-white rounded-lg dark:bg-background-light">
-              <summary class="text-xl font-medium text-gray-800 cursor-pointer dark:text-white hover:text-primary">Can I customize which
-                files are included in the output?</summary>
-              <p class="mt-2 text-gray-600 dark:text-gray-300">Yes, you can customize file inclusion using several options:</p>
-              <ul class="mt-2 text-gray-600 list-disc list-inside dark:text-gray-300">
-                <li>Use .gitignore patterns</li>
-                <li>Apply standard ignore patterns</li>
-                <li>Set a custom file size limit</li>
-                <li>Specify custom ignore patterns</li>
-              </ul>
-            </details>
-            <details class="p-4 bg-white rounded-lg dark:bg-background-light">
-              <summary class="text-xl font-medium text-gray-800 cursor-pointer dark:text-white hover:text-primary">How does the tool handle
-                large repositories?</summary>
-              <p class="mt-2 text-gray-600 dark:text-gray-300">The converter processes repositories efficiently, but for very large repos,
-                it may take some time. You can set a file size limit to exclude large files and use ignore patterns to
-                focus on relevant content.</p>
-            </details>
-            <details class="p-4 bg-white rounded-lg dark:bg-background-light">
-              <summary class="text-xl font-medium text-gray-800 cursor-pointer dark:text-white hover:text-primary">Is my GitHub API key
-                safe?</summary>
-              <p class="mt-2 text-gray-600 dark:text-gray-300">Yes, your GitHub API key is securely stored in your browser using encryption
-                and is never sent to our servers. It's only used client-side to authenticate requests to the GitHub API.
-              </p>
-            </details>
+            <div v-for="(faq, index) in faqs" :key="index" class="p-4 bg-white rounded-lg dark:bg-background-light">
+              <button 
+                @click="faq.isOpen = !faq.isOpen"
+                class="flex items-center justify-between w-full text-xl font-medium text-gray-800 cursor-pointer dark:text-white hover:text-primary"
+              >
+                <span class="flex items-center">
+                  <Icon :name="faq.icon" class="w-6 h-6 mr-2" />
+                  {{ faq.question }}
+                </span>
+                <Icon 
+                  name="mdi:chevron-down" 
+                  class="w-6 h-6 transition-transform duration-300"
+                  :class="{ 'transform rotate-180': faq.isOpen }"
+                />
+              </button>
+              <Transition name="fade">
+                <div v-if="faq.isOpen" class="mt-2">
+                  <p class="text-gray-600 dark:text-gray-300" v-html="faq.answer"></p>
+                  <ul v-if="faq.list" class="mt-2 text-gray-600 list-disc list-inside dark:text-gray-300">
+                    <li v-for="item in faq.list" :key="item">{{ item }}</li>
+                  </ul>
+                  <pre v-if="faq.code" class="w-full px-3 py-2 mt-2 text-sm text-gray-800 whitespace-pre-wrap bg-gray-100 border border-gray-300 rounded-lg focus:outline-none dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700" tabindex="0"><code>{{ faq.code }}</code></pre>
+                </div>
+              </Transition>
+            </div>
           </div>
         </section>
       </div>
-      <footer class="py-6 text-center text-gray-500 dark:text-gray-400">
-        <p>&copy; {{ new Date().getFullYear() }} GitHub to LLM Context Converter. All rights reserved.</p>
+      <footer class="py-8">
+        <div class="container px-4 mx-auto">
+          <div class="flex flex-col items-center justify-between md:flex-row">
+            <div class="flex mb-4 space-x-6 md:mb-0 md:order-2">
+              <a href="https://github.com/LeonKohli/github-to-llm-context-converter" target="_blank" rel="noopener noreferrer" 
+                 class="text-gray-600 transition-colors duration-300 dark:text-gray-300 hover:text-primary">
+                <Icon name="mdi:github" class="w-6 h-6 transition-transform duration-300 transform hover:scale-110" />
+              </a>
+              <a href="https://x.com/LeonKohli" target="_blank" rel="noopener noreferrer" 
+                 class="text-gray-600 transition-colors duration-300 dark:text-gray-300 hover:text-primary">
+                <Icon name="mdi:twitter" class="w-6 h-6 transition-transform duration-300 transform hover:scale-110" />
+              </a>
+            </div>
+            <div class="md:order-1">
+              <p class="text-gray-600 dark:text-gray-300">&copy; {{ new Date().getFullYear() }} GitHub to LLM Context Converter</p>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Empowering developers with AI-friendly context</p>
+            </div>
+          </div>
+          <div class="pt-6 mt-6 border-t border-gray-200 dark:border-gray-700">
+            <p class="text-sm text-center text-gray-500 dark:text-gray-400">
+              Made with <span class="text-red-500">&hearts;</span> by Leon Kohli. All rights reserved.
+            </p>
+          </div>
+        </div>
       </footer>
     </div>
   </div>
@@ -138,48 +162,84 @@ const handleSaveApiKey = async (newApiKey) => {
   fetchRepoWithToast()
 }
 
-const faqSchema = [
+const faqs = ref([
   {
-    "@type": "Question",
-    "name": "What is the GitHub to LLM Context Converter used for?",
-    "acceptedAnswer": {
-      "@type": "Answer",
-      "text": "This tool converts GitHub repositories into a format that's easily understood by Large Language Models (LLMs) like ChatGPT or Claude. It allows you to provide comprehensive context about your project to an AI, enabling more informed discussions, code reviews, or assistance with your work."
-    }
+    icon: "mdi:help-circle",
+    question: "What is the GitHub to LLM Context Converter used for?",
+    answer: "This tool converts GitHub repositories into a format that's easily understood by Large Language Models (LLMs) like ChatGPT or Claude. It allows you to provide comprehensive context about your project to an AI, enabling more informed discussions, code reviews, or assistance with your work.",
+    isOpen: false
   },
   {
-    "@type": "Question",
-    "name": "How does the XML output structure look?",
-    "acceptedAnswer": {
-      "@type": "Answer",
-      "text": "The XML output follows this general structure: <llm_context><repository><metadata>...</metadata><tree_structure>...</tree_structure><contents><file><content><![CDATA[...]]></content></file>...</contents></repository></llm_context>"
-    }
+    icon: "mdi:code-tags",
+    question: "How does the XML output structure look?",
+    answer: "The XML output follows this general structure:",
+    code: `<llm_context>
+  <repository>
+    <metadata>...</metadata>
+    <tree_structure>...</tree_structure>
+    <contents>
+      <file>
+        <content><![CDATA[...]]></content>
+      </file>
+      ...
+    </contents>
+  </repository>
+</llm_context>`,
+    isOpen: false
   },
   {
-    "@type": "Question",
-    "name": "Can I customize which files are included in the output?",
-    "acceptedAnswer": {
-      "@type": "Answer",
-      "text": "Yes, you can customize file inclusion using several options: Use .gitignore patterns, Apply standard ignore patterns, Set a custom file size limit, Specify custom ignore patterns."
-    }
+    icon: "mdi:file-cog",
+    question: "Can I customize which files are included in the output?",
+    answer: "Yes, you can customize file inclusion using several options:",
+    list: [
+      "Use .gitignore patterns",
+      "Apply standard ignore patterns",
+      "Set a custom file size limit",
+      "Specify custom ignore patterns"
+    ],
+    isOpen: false
   },
   {
-    "@type": "Question",
-    "name": "How does the tool handle large repositories?",
-    "acceptedAnswer": {
-      "@type": "Answer",
-      "text": "The converter processes repositories efficiently, but for very large repos, it may take some time. You can set a file size limit to exclude large files and use ignore patterns to focus on relevant content."
-    }
+    icon: "mdi:database",
+    question: "How does the tool handle large repositories?",
+    answer: "The converter processes repositories efficiently, but for very large repos, it may take some time. You can set a file size limit to exclude large files and use ignore patterns to focus on relevant content.",
+    isOpen: false
   },
   {
-    "@type": "Question",
-    "name": "Is my GitHub API key safe?",
-    "acceptedAnswer": {
-      "@type": "Answer",
-      "text": "Yes, your GitHub API key is securely stored in your browser using encryption and is never sent to our servers. It's only used client-side to authenticate requests to the GitHub API."
-    }
+    icon: "mdi:shield-check",
+    question: "Is my GitHub API key safe?",
+    answer: "Yes, your GitHub API key is securely stored in your browser using encryption and is never sent to our servers. It's only used client-side to authenticate requests to the GitHub API.",
+    isOpen: false
+  },
+  {
+    icon: "mdi:language-markdown",
+    question: "Does the converter support all file types?",
+    answer: "The converter supports all text-based file types commonly found in GitHub repositories, including but not limited to: source code files (e.g., .js, .py, .java), markup files (e.g., .md, .html), configuration files (e.g., .json, .yaml), and more. Binary files are excluded by default to optimize the output for LLM processing.",
+    isOpen: false
+  },
+  {
+    icon: "mdi:github",
+    question: "Can I use this tool with private GitHub repositories?",
+    answer: "Yes, you can use this tool with private GitHub repositories. You'll need to provide a GitHub API key with the necessary permissions to access your private repositories. The tool will then be able to fetch and process the content of your private repos securely.",
+    isOpen: false
+  },
+  {
+    icon: "mdi:refresh",
+    question: "How often is the repository data updated?",
+    answer: "The tool fetches the latest data from your GitHub repository each time you initiate the conversion process. This ensures that you're always working with the most up-to-date version of your codebase when interacting with LLMs.",
+    isOpen: false
+  },
+])
+
+const faqSchema = faqs.value.map(faq => ({
+  "@type": "Question",
+  "name": faq.question,
+  "acceptedAnswer": {
+    "@type": "Answer",
+    "text": faq.answer + (faq.list ? ' ' + faq.list.join(', ') : '')
   }
-]
+}))
+
 const repoFetcher = ref(null)
 onUnmounted(() => {
   resetState()
@@ -201,3 +261,14 @@ useHead({
   ]
 })
 </script>
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>
