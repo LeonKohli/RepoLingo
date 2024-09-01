@@ -1,7 +1,7 @@
 <template>
   <div class="relative">
     <button @click="toggleDropdown" type="button"
-      class="w-full px-3 py-2 text-sm text-left text-gray-800 transition-all duration-300 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700">
+      class="w-full px-3 py-2 text-sm text-left text-gray-800 transition-all duration-300 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary hover:bg-gray-100 dark:bg-background-dark dark:text-gray-200 dark:border-gray-700 dark:hover:bg-background-light">
       <span v-if="loading" class="flex items-center">
         <Icon name="uil:spinner" class="mr-2 animate-spin" />
         Loading...
@@ -14,11 +14,11 @@
     <Teleport to="body">
       <transition name="fade">
         <ul v-if="isOpen && !loading"
-          class="fixed z-[9999] mt-1 overflow-auto text-sm bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 dark:bg-gray-800 dark:border-gray-700 dropdown-menu"
+          class="fixed z-[9999] mt-1 overflow-auto text-sm bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 dark:bg-background-dark dark:border-gray-700 dropdown-menu"
           :style="dropdownStyle">
           <transition-group name="list">
             <li v-for="option in options" :key="option" @click="selectOption(option)"
-              class="px-3 py-2 transition-colors duration-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700">
+              class="px-3 py-2 transition-colors duration-200 cursor-pointer hover:bg-gray-100 dark:hover:bg-background-light">
               {{ option }}
             </li>
           </transition-group>

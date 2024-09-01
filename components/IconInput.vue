@@ -1,10 +1,10 @@
 <template>
     <div class="relative">
         <Icon v-if="iconName" :name="iconName"
-            class="absolute text-gray-400 transform -translate-y-1/2 left-3 top-1/2" />
+            class="absolute text-gray-400 transform -translate-y-1/2 left-3 top-1/2 dark:text-gray-500" />
         <input :value="modelValue" @input="$emit('update:modelValue', $event.target.value)" :type="type" :id="id"
             :placeholder="placeholder" :required="required"
-            :class="['w-full px-3 py-2 bg-white border rounded-lg text-secondary border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary dark:bg-secondary dark:text-white dark:border-gray-600', iconName ? 'pl-10' : 'px-4']">
+            :class="['w-full px-3 py-2 bg-white border rounded-lg text-secondary border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary dark:bg-background-dark dark:text-white dark:border-gray-700 transition-colors duration-200', iconName ? 'pl-10' : 'px-4']">
     </div>
 </template>
 
