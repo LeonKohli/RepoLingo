@@ -19,11 +19,12 @@ export const useGithubState = () => useState('github', () => ({
 export const useGithubActions = () => {
   const state = useGithubState()
   const { apiKey, updateApiKey } = useApiKeyState()
+  const { showToast } = useToast()
 
   const fetchRepo = async () => {
     if (!state.value.repoUrl) {
-      state.value.error = 'Please provide a repository URL'
-      return
+      showToast('Please provide a repository URL', 'error')
+      return false
     }
 
     state.value.loading = true
@@ -52,13 +53,10 @@ export const useGithubActions = () => {
       if (state.value.selectedBranch && !data.branches.includes(state.value.selectedBranch)) {
         state.value.selectedBranch = ''
       }
+      return true
     } catch (error) {
-      if (error.statusCode === 403 && error.statusMessage.includes('API rate limit exceeded')) {
-        state.value.showApiKeyModal = true
-        state.value.error = 'API rate limit exceeded'
-      } else {
-        state.value.error = error.message || 'An error occurred'
-      }
+      handleError(error)
+      return false
     } finally {
       state.value.loading = false
     }
@@ -66,7 +64,7 @@ export const useGithubActions = () => {
 
   const fetchBranches = async () => {
     if (!state.value.repoUrl || !isValidGithubUrl(state.value.repoUrl)) {
-      state.value.error = 'Please provide a valid repository URL'
+      showToast('Please provide a valid repository URL', 'error')
       return
     }
 
@@ -84,15 +82,28 @@ export const useGithubActions = () => {
 
       state.value.branches = data.branches
     } catch (error) {
-      if (error.statusCode === 403 && error.statusMessage.includes('API rate limit exceeded')) {
-        state.value.showApiKeyModal = true
-        state.value.error = 'API rate limit exceeded'
-      } else {
-        state.value.error = error.message || 'An error occurred'
-      }
+      handleError(error)
     } finally {
       state.value.loading = false
     }
+  }
+
+  const handleError = (error) => {
+    if (error.statusCode === 403 && error.statusMessage.includes('API rate limit exceeded')) {
+      state.value.showApiKeyModal = true
+      showToast('API rate limit exceeded. Please add or update your GitHub API key.', 'error')
+    } else if (error.statusCode === 500 && error.statusMessage.includes('Repository not found')) {
+      showToast('Repository not found. Please check the URL and ensure you have access to this repository.', 'error')
+    } else if (error.statusCode === 500 && error.statusMessage.includes('Not Found')) {
+      showToast('Failed to fetch branches. Please check the repository URL and your access permissions.', 'error')
+    } else if (error.statusCode === 500 && error.statusMessage.includes('API rate limit exceeded')) {
+      state.value.showApiKeyModal = true
+      showToast('API rate limit exceeded. Please add or update your GitHub API key to increase your rate limit.', 'error')
+    } else {
+      showToast(error.message || 'An error occurred', 'error')
+    }
+    console.error("Error:", error)
+    state.value.error = error.message || 'An error occurred'
   }
 
   const isValidGithubUrl = (url) => {

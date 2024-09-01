@@ -20,7 +20,7 @@
         </div>
       </div>
     </main>
-    <ToastNotifications :toasts="toasts" />
+    <ToastNotifications />
     <ClientOnly>
       <ApiKeyModal v-model:show="githubState.showApiKeyModal" @save="handleSaveApiKey" />
     </ClientOnly>
@@ -105,73 +105,31 @@
   </div>
 </template>
 <script setup>
-useSeoMeta({
-  ogImage: '/og-image-1200x630.png',
-  twitterTitle: 'GitHub to LLM Context Converter',
-  twitterDescription: 'Convert GitHub repositories to LLM-friendly context. Improve your interactions with ChatGPT, Claude, or any LLM by providing comprehensive project context for better understanding and assistance.',
-  twitterImage: '/og-image-1200x630.png',
-  twitterCard: 'summary_large_image'
-})
-useHead({
-  link: [
-    {
-      rel: 'icon',
-      type: 'image/x-icon',
-      href: '/favicon.ico'
-    }
-  ]
-})
 const githubState = useGithubState()
 const { fetchRepo, fetchBranches, resetState, copyToClipboard, downloadXml } = useGithubActions()
-const toasts = ref([])
-let toastId = 0
-const showToast = (message, type = 'info') => {
-  const id = toastId++
-  toasts.value.push({ id, message, type })
-  setTimeout(() => {
-    toasts.value = toasts.value.filter(t => t.id !== id)
-  }, 3000)
-}
+const { showToast } = useToast()
+
 const fetchRepoWithToast = async () => {
   try {
-    await fetchRepo()
-    if (githubState.value.error) {
-      const customErrorMessage = getCustomErrorMessage(githubState.value.error)
-      showToast(customErrorMessage, 'error')
-    } else {
+    const success = await fetchRepo()
+    if (success) {
       showToast('Repository fetched successfully', 'success')
     }
   } catch (error) {
-    const customErrorMessage = getCustomErrorMessage(error.message)
-    showToast(customErrorMessage, 'error')
+    console.error("Error in fetchRepoWithToast:", error)
   }
 }
 
-
-const getCustomErrorMessage = (errorMessage) => {
-  if (errorMessage.includes('Repository not found') || errorMessage.includes('not found')) {
-    return "Oops! We couldn't find that repository. Double-check the URL and try again."
-  }
-  if (errorMessage.includes('API rate limit exceeded')) {
-    return "Oops! We've hit GitHub's API rate limit. Try adding your GitHub API key in the settings or wait a bit before trying again."
-  }
-  if (errorMessage.includes('Network Error')) {
-    return "Looks like the internet gremlins are at it again. Check your connection and give it another shot."
-  }
-  if (errorMessage.includes('Bad credentials')) {
-    return "Uh-oh! It seems your GitHub API key is invalid. Please check your settings and try again with a valid API key."
-  }
-  // Add more custom error messages as needed
-  return "Something went wrong. Let's give it another try!"
-}
 const copyToClipboardWithToast = async () => {
   const result = await copyToClipboard()
   showToast(result.message, result.success ? 'success' : 'error')
 }
+
 const downloadXmlWithToast = () => {
   const result = downloadXml()
   showToast(result.message, result.success ? 'success' : 'error')
 }
+
 const handleSaveApiKey = async (newApiKey) => {
   githubState.value.apiKey = newApiKey
   if (repoFetcher.value && githubState.value.repoUrl) {
@@ -179,6 +137,7 @@ const handleSaveApiKey = async (newApiKey) => {
   }
   fetchRepoWithToast()
 }
+
 const faqSchema = [
   {
     "@type": "Question",
@@ -224,5 +183,21 @@ const faqSchema = [
 const repoFetcher = ref(null)
 onUnmounted(() => {
   resetState()
+})
+useSeoMeta({
+  ogImage: '/og-image-1200x630.png',
+  twitterTitle: 'GitHub to LLM Context Converter',
+  twitterDescription: 'Convert GitHub repositories to LLM-friendly context. Improve your interactions with ChatGPT, Claude, or any LLM by providing comprehensive project context for better understanding and assistance.',
+  twitterImage: '/og-image-1200x630.png',
+  twitterCard: 'summary_large_image'
+})
+useHead({
+  link: [
+    {
+      rel: 'icon',
+      type: 'image/x-icon',
+      href: '/favicon.ico'
+    }
+  ]
 })
 </script>
