@@ -1,4 +1,4 @@
-# RepoLing
+# RepoLingo
 
 ### Turn any GitHub Repository into LLM-ready data
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
