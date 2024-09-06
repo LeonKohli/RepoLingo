@@ -1,20 +1,22 @@
 <template>
-  <!-- This component doesn't render anything visible -->
+  <div style="display: none;">
+    <!-- This component doesn't render anything visible, but we need a root element -->
+  </div>
 </template>
 
 <script setup>
 const props = defineProps({
   title: {
     type: String,
-    default: 'GitHub to LLM Context Converter | Enhance Your AI Interactions'
+    default: 'RepoLingo - Convert GitHub Repositories to LLM-ready Data'
   },
   description: {
     type: String,
-    default: 'Convert GitHub repositories to LLM-friendly context. Improve your interactions with ChatGPT, Claude, or any LLM by providing comprehensive project context for better understanding and assistance.'
+    default: 'Turn any GitHub Repository into LLM-ready data. Improve ChatGPT, Claude, or any LLM by providing comprehensive project context for better understanding and assistance.'
   },
   keywords: {
     type: String,
-    default: 'GitHub, LLM, AI, XML, context converter, ChatGPT, Claude, project understanding, code assistance, AI interaction'
+    default: 'RepoLingo, GitHub, LLM, AI, XML, Github converter, ChatGPT, Claude, project understanding, code assistance, repository converter'
   },
   faqSchema: {
     type: Array,

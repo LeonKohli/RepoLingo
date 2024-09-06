@@ -27,10 +27,10 @@
     <div class="mt-32">
       <div class="container max-w-3xl px-4 py-16 mx-auto">
         <section class="mb-16 text-center">
-          <h1 class="mb-8 text-4xl font-bold text-primary">GitHub to LLM Context Converter</h1>
-          <h2 class="mb-4 text-2xl font-semibold text-gray-800 dark:text-white">Enhance Your AI Interactions</h2>
+          <h1 class="mb-8 text-4xl font-bold text-primary">RepoLingo</h1>
+          <h2 class="mb-4 text-2xl font-semibold text-gray-800 dark:text-white">Turn any GitHub Repository into LLM-ready data</h2>
           <p class="mb-4 text-gray-600 dark:text-gray-300">
-            Our GitHub to LLM Context Converter is a powerful tool designed to transform GitHub repositories into
+            RepoLingo is a powerful tool designed to transform GitHub repositories into
             LLM-friendly context. This innovative solution helps users provide comprehensive project information to AI models like ChatGPT,
             Claude, or any other LLM, enabling more effective communication and assistance.
           </p>
@@ -114,7 +114,7 @@
               </a>
             </div>
             <div class="md:order-1">
-              <p class="text-gray-600 dark:text-gray-300">&copy; {{ new Date().getFullYear() }} GitHub to LLM Context Converter</p>
+              <p class="text-gray-600 dark:text-gray-300">&copy; {{ new Date().getFullYear() }} RepoLingo</p>
               <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Empowering developers with AI-friendly context</p>
             </div>
           </div>
@@ -165,8 +165,8 @@ const handleSaveApiKey = async (newApiKey) => {
 const faqs = ref([
   {
     icon: "mdi:help-circle",
-    question: "What is the GitHub to LLM Context Converter used for?",
-    answer: "This tool converts GitHub repositories into a format that's easily understood by Large Language Models (LLMs) like ChatGPT or Claude. It allows you to provide comprehensive context about your project to an AI, enabling more informed discussions, code reviews, or assistance with your work.",
+    question: "What is RepoLingo used for?",
+    answer: "RepoLingo converts GitHub repositories into a format that's easily understood by Large Language Models (LLMs) like ChatGPT or Claude. It allows you to provide comprehensive context about your project to an AI, enabling more informed discussions, code reviews, or assistance with your work.",
     isOpen: false
   },
   {
@@ -201,8 +201,8 @@ const faqs = ref([
   },
   {
     icon: "mdi:database",
-    question: "How does the tool handle large repositories?",
-    answer: "The converter processes repositories efficiently, but for very large repos, it may take some time. You can set a file size limit to exclude large files and use ignore patterns to focus on relevant content.",
+    question: "How does RepoLingo handle large repositories?",
+    answer: "RepoLingo processes repositories efficiently, but for very large repos, it may take some time. You can set a file size limit to exclude large files and use ignore patterns to focus on relevant content.",
     isOpen: false
   },
   {
@@ -213,20 +213,20 @@ const faqs = ref([
   },
   {
     icon: "mdi:language-markdown",
-    question: "Does the converter support all file types?",
-    answer: "The converter supports all text-based file types commonly found in GitHub repositories, including but not limited to: source code files (e.g., .js, .py, .java), markup files (e.g., .md, .html), configuration files (e.g., .json, .yaml), and more. Binary files are excluded by default to optimize the output for LLM processing.",
+    question: "Does RepoLingo support all file types?",
+    answer: "RepoLingo supports all text-based file types commonly found in GitHub repositories, including but not limited to: source code files (e.g., .js, .py, .java), markup files (e.g., .md, .html), configuration files (e.g., .json, .yaml), and more. Binary files are excluded by default to optimize the output for LLM processing.",
     isOpen: false
   },
   {
     icon: "mdi:github",
-    question: "Can I use this tool with private GitHub repositories?",
-    answer: "Yes, you can use this tool with private GitHub repositories. You'll need to provide a GitHub API key with the necessary permissions to access your private repositories. The tool will then be able to fetch and process the content of your private repos securely.",
+    question: "Can I use RepoLingo with private GitHub repositories?",
+    answer: "Yes, you can use RepoLingo with private GitHub repositories. You'll need to provide a GitHub API key with the necessary permissions to access your private repositories. The tool will then be able to fetch and process the content of your private repos securely.",
     isOpen: false
   },
   {
     icon: "mdi:refresh",
     question: "How often is the repository data updated?",
-    answer: "The tool fetches the latest data from your GitHub repository each time you initiate the conversion process. This ensures that you're always working with the most up-to-date version of your codebase when interacting with LLMs.",
+    answer: "RepoLingo fetches the latest data from your GitHub repository each time you initiate the conversion process. This ensures that you're always working with the most up-to-date version of your codebase when interacting with LLMs.",
     isOpen: false
   },
 ])
@@ -246,8 +246,8 @@ onUnmounted(() => {
 })
 useSeoMeta({
   ogImage: '/og-image-1200x630.png',
-  twitterTitle: 'GitHub to LLM Context Converter',
-  twitterDescription: 'Convert GitHub repositories to LLM-friendly context. Improve your interactions with ChatGPT, Claude, or any LLM by providing comprehensive project context for better understanding and assistance.',
+  twitterTitle: 'RepoLingo - Convert GitHub Repositories to LLM-ready Data',
+  twitterDescription: 'Turn any GitHub Repository into LLM-ready data. Improve ChatGPT, Claude, or any LLM by providing comprehensive project context for better understanding and assistance.',
   twitterImage: '/og-image-1200x630.png',
   twitterCard: 'summary_large_image'
 })

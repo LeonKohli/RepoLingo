@@ -9,17 +9,17 @@ export default defineNuxtConfig({
   },
   site: {
     url: 'https://llm-context.leonkohli.dev/',
-    name: 'GitHub to LLM Context Converter',
-    description: 'Convert GitHub repositories to LLM-friendly context.',
+    name: 'RepoLingo',
+    description: 'RepoLingo - Convert GitHub Repositories to LLM-ready Data',
     defaultLocale: 'en'
   },
   app: {
     head: {
-      title: 'GitHub to LLM Context Converter',
+      title: 'RepoLingo - Convert GitHub Repositories to LLM-ready Data',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { hid: 'description', name: 'description', content: 'Convert GitHub repositories to LLM-friendly context.' }
+        { hid: 'description', name: 'description', content: 'RepoLingo - Convert GitHub Repositories to LLM-ready Data' }
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
