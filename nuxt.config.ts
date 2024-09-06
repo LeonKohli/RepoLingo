@@ -8,7 +8,7 @@ export default defineNuxtConfig({
     classSuffix: ''
   },
   site: {
-    url: 'https://llm-context.leonkohli.dev/',
+    url: 'https://repolingo.leonkohli.dev/',
     name: 'RepoLingo',
     description: 'RepoLingo - Convert GitHub Repositories to LLM-ready Data',
     defaultLocale: 'en'

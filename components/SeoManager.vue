@@ -24,7 +24,7 @@ const props = defineProps({
   },
   canonicalUrl: {
     type: String,
-    default: 'https://llm-context.leonkohli.dev'
+    default: 'https://repolingo.leonkohli.dev'
   }
 })
 
