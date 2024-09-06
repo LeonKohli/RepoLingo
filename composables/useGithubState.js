@@ -14,6 +14,7 @@ export const useGithubState = () => useState('github', () => ({
   selectedBranch: '',
   showApiKeyModal: false,
   toasts: [],
+  outputFormat: 'xml',
 }))
 
 export const useGithubActions = () => {
@@ -41,11 +42,12 @@ export const useGithubActions = () => {
           customIgnore: state.value.customIgnore,
           fileSizeLimit: state.value.fileSizeLimit,
           selectedBranch: state.value.selectedBranch,
-          includeTree: state.value.includeTree
+          includeTree: state.value.includeTree,
+          format: state.value.outputFormat
         }
       })
 
-      state.value.output = data.xmlContent
+      state.value.output = data.output
       state.value.repoInfo = data.repoInfo
       state.value.branches = data.branches
       state.value.rateLimitInfo = data.rateLimitInfo
@@ -132,22 +134,39 @@ export const useGithubActions = () => {
       .catch(() => ({ success: false, message: 'Failed to copy' }))
   }
 
-  const downloadXml = () => {
+  const downloadOutput = () => {
     if (!state.value.output) {
       return { success: false, message: 'No content to download' }
     }
-
-    const blob = new Blob([state.value.output], {type: 'text/xml'})
+    const blob = new Blob([state.value.output], { type: getContentType(state.value.outputFormat) })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
     const repoName = state.value.repoUrl.split('/').pop()
-    a.download = `${repoName}_llm_context_${timestamp}.xml`
+    const fileExtension = getFileExtension(state.value.outputFormat)
+    a.download = `${repoName}_llm_context_${timestamp}.${fileExtension}`
     a.click()
     URL.revokeObjectURL(url)
+    return { success: true, message: `${state.value.outputFormat.toUpperCase()} downloaded successfully` }
+  }
 
-    return { success: true, message: 'XML downloaded successfully' }
+  const getContentType = (format) => {
+    switch (format) {
+      case 'xml': return 'text/xml'
+      case 'markdown': return 'text/markdown'
+      case 'plaintext': return 'text/plain'
+      default: return 'text/plain'
+    }
+  }
+
+  const getFileExtension = (format) => {
+    switch (format) {
+      case 'xml': return 'xml'
+      case 'markdown': return 'md'
+      case 'plaintext': return 'txt'
+      default: return 'txt'
+    }
   }
 
   return {
@@ -155,7 +174,7 @@ export const useGithubActions = () => {
     fetchBranches,
     resetState,
     copyToClipboard,
-    downloadXml,
+    downloadOutput,
     apiKey,
     updateApiKey
   }

@@ -9,11 +9,12 @@
         <p class="mt-4 text-sm text-gray-600 dark:text-gray-400">Fetching repository...</p>
       </div>
       <div v-else-if="output" class="flex flex-col flex-grow w-full space-y-4 transition-all duration-300">
-        <div class="flex-grow w-full h-full px-3 py-2 overflow-auto text-sm text-gray-800 whitespace-pre-wrap bg-white border border-gray-300 rounded-lg focus:outline-none dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700" style="max-height: calc(100vh - 12rem);">
-          <pre
-            tabindex="0" @keydown.ctrl.a.prevent="selectAllOutput"
-            ref="outputContent">
-            <code v-html="highlightedOutput" class="block w-full h-full"></code>
+        <div
+          class="flex-grow w-full h-full px-3 py-2 overflow-auto text-sm text-gray-800 whitespace-pre-wrap bg-white border border-gray-300 rounded-lg focus:outline-none dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
+          style="max-height: calc(100vh - 12rem);">
+          <pre tabindex="0" @keydown.ctrl.a.prevent="selectAllOutput" ref="outputContent">
+            <code v-if="format === 'xml'" v-html="highlightedOutput" class="block w-full h-full"></code>
+            <code v-else class="block w-full h-full">{{ output }}</code>
           </pre>
         </div>
       </div>
@@ -29,7 +30,7 @@
             <Icon :name="copyingState ? 'uil:check' : 'uil:copy'" class="mr-2" />
             {{ copyingState ? 'Copied!' : 'Copy' }}
           </button>
-          <button @click="downloadXml"
+          <button @click="downloadOutput"
             class="px-4 py-2 text-gray-800 transition-all duration-300 bg-gray-200 border border-gray-300 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 active:bg-gray-400 dark:bg-gray-600 dark:text-white dark:border-gray-500 dark:hover:bg-gray-700 dark:active:bg-gray-800">
             <Icon :name="downloadingState ? 'uil:check' : 'uil:download-alt'" class="mr-2" />
             {{ downloadingState ? 'Downloaded!' : 'Download' }}
@@ -47,13 +48,19 @@
 import { encode } from 'gpt-tokenizer'
 import hljs from 'highlight.js/lib/core'
 import xml from 'highlight.js/lib/languages/xml'
+import markdown from 'highlight.js/lib/languages/markdown'
 import 'highlight.js/styles/github-dark.css'
 
 hljs.registerLanguage('xml', xml)
+hljs.registerLanguage('markdown', markdown)
 
 const props = defineProps({
   loading: Boolean,
   output: String,
+  format: {
+    type: String,
+    default: 'xml'
+  }
 })
 
 const emit = defineEmits(['copy', 'download'])
@@ -75,7 +82,7 @@ const copyToClipboard = async () => {
   }, 2000)
 }
 
-const downloadXml = async () => {
+const downloadOutput = async () => {
   downloadingState.value = true
   emit('download')
   setTimeout(() => {
@@ -95,7 +102,12 @@ const selectAllOutput = () => {
 
 const highlightedOutput = computed(() => {
   if (!props.output) return ''
-  return hljs.highlight(props.output, { language: 'xml' }).value
+  if (props.format === 'xml') {
+    return hljs.highlight(props.output, { language: 'xml' }).value
+  } else if (props.format === 'markdown') {
+    return hljs.highlight(props.output, { language: 'markdown' }).value
+  }
+  return props.output
 })
 </script>
 

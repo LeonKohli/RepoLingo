@@ -1,7 +1,7 @@
 import { defineEventHandler, readBody, createError } from 'h3'
 import { Octokit } from '@octokit/rest'
 import { shouldIgnore } from '../utils/ignorePatterns'
-import { formatXml } from '../utils/xmlFormatter'
+import { formatOutput } from '../utils/formatter'
 
 const fetchContents = async (octokit, owner, repo, branch, path, useGitignore, useStandardIgnore, customIgnore, fileSizeLimit, gitignorePatterns) => {
   const { data } = await octokit.repos.getContent({ owner, repo, path, ref: branch })
@@ -32,7 +32,7 @@ const fetchContents = async (octokit, owner, repo, branch, path, useGitignore, u
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
-  const { repoUrl, apiKey, useGitignore, useStandardIgnore, customIgnore, fileSizeLimit, selectedBranch, includeTree } = body
+  const { repoUrl, apiKey, useGitignore, useStandardIgnore, customIgnore, fileSizeLimit, selectedBranch, includeTree, format } = body
 
   try {
     // Validate the repository URL
@@ -97,13 +97,13 @@ export default defineEventHandler(async (event) => {
 
     // Fetch contents
     const contents = await fetchContents(octokit, owner, repo, branchToUse, '', useGitignore, useStandardIgnore, customIgnore, fileSizeLimit, gitignorePatterns)
-    const xmlContent = formatXml(contents, owner, repo, branchToUse, includeTree)
+    const output = formatOutput(contents, owner, repo, branchToUse, includeTree, format)
 
     // Fetch rate limit information
     const { data: rateLimit } = await octokit.rateLimit.get()
 
     return {
-      xmlContent,
+      output,
       repoInfo: `Repository: ${owner}/${repo} (Default branch: ${repoData.default_branch})`,
       rateLimitInfo: `API Rate Limit: ${rateLimit.rate.remaining}/${rateLimit.rate.limit} (Resets at ${new Date(rateLimit.rate.reset * 1000).toLocaleString()})`,
       branches

@@ -8,7 +8,8 @@
         <ToggleSwitch v-model="useGitignore" id="use-gitignore" />
       </div>
       <div class="flex items-center justify-between">
-        <label for="use-standard-ignore" class="text-sm font-medium text-gray-700 dark:text-gray-300">Use standard ignore patterns</label>
+        <label for="use-standard-ignore" class="text-sm font-medium text-gray-700 dark:text-gray-300">Use standard
+          ignore patterns</label>
         <ToggleSwitch v-model="useStandardIgnore" id="use-standard-ignore" />
       </div>
       <div class="flex items-center justify-between">
@@ -16,17 +17,20 @@
         <ToggleSwitch v-model="includeTree" id="include-tree" />
       </div>
       <div>
-        <label for="file-size-limit" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">File size limit (KB)</label>
+        <label for="file-size-limit" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">File size
+          limit (KB)</label>
         <NumberInput v-model="fileSizeLimit" id="file-size-limit" :min="1" :step="1" />
       </div>
       <div>
-        <label for="custom-ignore" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Custom ignore patterns</label>
+        <label for="custom-ignore" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Custom ignore
+          patterns</label>
         <textarea v-model="customIgnore" id="custom-ignore" placeholder="Enter custom ignore patterns, one per line"
           rows="4"
           class="w-full px-3 py-2 text-sm text-gray-800 transition-all duration-300 ease-in-out bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:bg-background-dark dark:text-gray-200 dark:border-gray-700"></textarea>
       </div>
       <div>
-        <label for="api-key" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">GitHub API Key</label>
+        <label for="api-key" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">GitHub API
+          Key</label>
         <div class="relative">
           <input :value="apiKey" @input="handleApiKeyInput" :type="showApiKey ? 'text' : 'password'" id="api-key"
             class="w-full px-3 py-2 pr-10 text-sm text-gray-800 transition-all duration-300 ease-in-out bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:bg-background-dark dark:text-gray-200 dark:border-gray-700"
@@ -36,6 +40,11 @@
             <Icon :name="showApiKey ? 'uil:eye-slash' : 'uil:eye'" />
           </button>
         </div>
+      </div>
+      <div>
+        <label for="output-format" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Output
+          Format</label>
+        <CustomDropdown v-model="outputFormat" :options="['xml', 'markdown', 'plaintext']" id="output-format" />
       </div>
     </div>
   </section>
@@ -57,14 +66,16 @@ const includeTree = ref(props.includeTree)
 const fileSizeLimit = ref(props.fileSizeLimit)
 const customIgnore = ref(props.customIgnore)
 const showApiKey = ref(false)
+const outputFormat = ref('xml')
 
-const emit = defineEmits(['update:useGitignore', 'update:useStandardIgnore', 'update:includeTree', 'update:fileSizeLimit', 'update:customIgnore'])
+const emit = defineEmits(['update:useGitignore', 'update:useStandardIgnore', 'update:includeTree', 'update:fileSizeLimit', 'update:customIgnore', 'update:outputFormat'])
 
 watch(useGitignore, (newValue) => emit('update:useGitignore', newValue))
 watch(useStandardIgnore, (newValue) => emit('update:useStandardIgnore', newValue))
 watch(fileSizeLimit, (newValue) => emit('update:fileSizeLimit', newValue))
 watch(customIgnore, (newValue) => emit('update:customIgnore', newValue))
 watch(includeTree, (newValue) => emit('update:includeTree', newValue))
+watch(outputFormat, (newValue) => emit('update:outputFormat', newValue))
 
 const toggleApiKeyVisibility = () => {
   showApiKey.value = !showApiKey.value

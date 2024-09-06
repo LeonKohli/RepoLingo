@@ -1,5 +1,6 @@
 <template>
-  <div class="min-h-screen text-gray-900 dark:text-white transition-colors duration-300 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-[#0f172a] dark:to-[#1e293b]">
+  <div
+    class="min-h-screen text-gray-900 dark:text-white transition-colors duration-300 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-[#0f172a] dark:to-[#1e293b]">
     <ClientOnly>
       <SeoManager :faqSchema="faqSchema" />
     </ClientOnly>
@@ -12,11 +13,11 @@
           <Settings v-model:useGitignore="githubState.useGitignore"
             v-model:useStandardIgnore="githubState.useStandardIgnore" v-model:includeTree="githubState.includeTree"
             v-model:fileSizeLimit="githubState.fileSizeLimit" v-model:customIgnore="githubState.customIgnore"
-            v-model:apiKey="githubState.apiKey" />
+            v-model:apiKey="githubState.apiKey" v-model:outputFormat="githubState.outputFormat" />
         </div>
         <div class="w-full lg:w-2/3">
-          <Output :loading="githubState.loading" :output="githubState.output" @copy="copyToClipboardWithToast"
-            @download="downloadXmlWithToast" class="h-full" />
+          <Output :loading="githubState.loading" :output="githubState.output" :format="githubState.outputFormat"
+            @copy="copyToClipboardWithToast" @download="downloadOutputWithToast" class="h-full" />
         </div>
       </div>
     </main>
@@ -28,18 +29,21 @@
       <div class="container max-w-3xl px-4 py-16 mx-auto">
         <section class="mb-16 text-center">
           <h1 class="mb-8 text-4xl font-bold text-primary">RepoLingo</h1>
-          <h2 class="mb-4 text-2xl font-semibold text-gray-800 dark:text-white">Turn any GitHub Repository into LLM-ready data</h2>
+          <h2 class="mb-4 text-2xl font-semibold text-gray-800 dark:text-white">Turn any GitHub Repository into
+            LLM-ready data</h2>
           <p class="mb-4 text-gray-600 dark:text-gray-300">
             RepoLingo is a powerful tool designed to transform GitHub repositories into
-            LLM-friendly context. This innovative solution helps users provide comprehensive project information to AI models like ChatGPT,
+            LLM-friendly context. This innovative solution helps users provide comprehensive project information to AI
+            models like ChatGPT,
             Claude, or any other LLM, enabling more effective communication and assistance.
           </p>
           <p class="mb-6 text-gray-600 dark:text-gray-300">
             With customizable settings and efficient processing, you can easily convert complex repository structures
             into a format that's perfect for in-depth discussions about your projects with AI assistants.
           </p>
-          <a href="https://github.com/LeonKohli/github-to-llm-context-converter" target="_blank" rel="noopener noreferrer" 
-             class="inline-flex items-center px-6 py-3 text-white transition-colors duration-300 rounded-lg bg-primary hover:bg-primary-dark">
+          <a href="https://github.com/LeonKohli/github-to-llm-context-converter" target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center px-6 py-3 text-white transition-colors duration-300 rounded-lg bg-primary hover:bg-primary-dark">
             <Icon name="mdi:github" class="w-6 h-6 mr-2" />
             View on GitHub
           </a>
@@ -50,22 +54,26 @@
             <div class="p-6 bg-white rounded-lg shadow-md dark:bg-background-light">
               <Icon name="mdi:file-tree" class="w-12 h-12 mb-4 text-primary" />
               <h3 class="mb-2 text-xl font-semibold">Repository Structure</h3>
-              <p class="text-gray-600 dark:text-gray-300">Preserves the original file structure for easy navigation and understanding.</p>
+              <p class="text-gray-600 dark:text-gray-300">Preserves the original file structure for easy navigation and
+                understanding.</p>
             </div>
             <div class="p-6 bg-white rounded-lg shadow-md dark:bg-background-light">
               <Icon name="mdi:cog" class="w-12 h-12 mb-4 text-primary" />
               <h3 class="mb-2 text-xl font-semibold">Customizable Settings</h3>
-              <p class="text-gray-600 dark:text-gray-300">Tailor the output with ignore patterns, file size limits, and more.</p>
+              <p class="text-gray-600 dark:text-gray-300">Tailor the output with ignore patterns, file size limits, and
+                more.</p>
             </div>
             <div class="p-6 bg-white rounded-lg shadow-md dark:bg-background-light">
               <Icon name="mdi:xml" class="w-12 h-12 mb-4 text-primary" />
               <h3 class="mb-2 text-xl font-semibold">XML Output</h3>
-              <p class="text-gray-600 dark:text-gray-300">Generates a structured XML format that's easily parsed by LLMs.</p>
+              <p class="text-gray-600 dark:text-gray-300">Generates a structured XML format that's easily parsed by
+                LLMs.</p>
             </div>
             <div class="p-6 bg-white rounded-lg shadow-md dark:bg-background-light">
               <Icon name="mdi:shield-lock" class="w-12 h-12 mb-4 text-primary" />
               <h3 class="mb-2 text-xl font-semibold">Secure Processing</h3>
-              <p class="text-gray-600 dark:text-gray-300">Your GitHub API key is securely stored and used only client-side.</p>
+              <p class="text-gray-600 dark:text-gray-300">Your GitHub API key is securely stored and used only
+                client-side.</p>
             </div>
           </div>
         </section>
@@ -73,19 +81,14 @@
           <h2 class="mb-6 text-3xl font-semibold text-center text-primary">Frequently Asked Questions</h2>
           <div class="space-y-4">
             <div v-for="(faq, index) in faqs" :key="index" class="p-4 bg-white rounded-lg dark:bg-background-light">
-              <button 
-                @click="faq.isOpen = !faq.isOpen"
-                class="flex items-center justify-between w-full text-xl font-medium text-gray-800 cursor-pointer dark:text-white hover:text-primary"
-              >
+              <button @click="faq.isOpen = !faq.isOpen"
+                class="flex items-center justify-between w-full text-xl font-medium text-gray-800 cursor-pointer dark:text-white hover:text-primary">
                 <span class="flex items-center">
                   <Icon :name="faq.icon" class="w-6 h-6 mr-2" />
                   {{ faq.question }}
                 </span>
-                <Icon 
-                  name="mdi:chevron-down" 
-                  class="w-6 h-6 transition-transform duration-300"
-                  :class="{ 'transform rotate-180': faq.isOpen }"
-                />
+                <Icon name="mdi:chevron-down" class="w-6 h-6 transition-transform duration-300"
+                  :class="{ 'transform rotate-180': faq.isOpen }" />
               </button>
               <Transition name="fade">
                 <div v-if="faq.isOpen" class="mt-2">
@@ -93,7 +96,9 @@
                   <ul v-if="faq.list" class="mt-2 text-gray-600 list-disc list-inside dark:text-gray-300">
                     <li v-for="item in faq.list" :key="item">{{ item }}</li>
                   </ul>
-                  <pre v-if="faq.code" class="w-full px-3 py-2 mt-2 text-sm text-gray-800 whitespace-pre-wrap bg-gray-100 border border-gray-300 rounded-lg focus:outline-none dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700" tabindex="0"><code>{{ faq.code }}</code></pre>
+                  <pre v-if="faq.code"
+                    class="w-full px-3 py-2 mt-2 text-sm text-gray-800 whitespace-pre-wrap bg-gray-100 border border-gray-300 rounded-lg focus:outline-none dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
+                    tabindex="0"><code>{{ faq.code }}</code></pre>
                 </div>
               </Transition>
             </div>
@@ -104,18 +109,20 @@
         <div class="container px-4 mx-auto">
           <div class="flex flex-col items-center justify-between md:flex-row">
             <div class="flex mb-4 space-x-6 md:mb-0 md:order-2">
-              <a href="https://github.com/LeonKohli/github-to-llm-context-converter" target="_blank" rel="noopener noreferrer" 
-                 class="text-gray-600 transition-colors duration-300 dark:text-gray-300 hover:text-primary">
+              <a href="https://github.com/LeonKohli/github-to-llm-context-converter" target="_blank"
+                rel="noopener noreferrer"
+                class="text-gray-600 transition-colors duration-300 dark:text-gray-300 hover:text-primary">
                 <Icon name="mdi:github" class="w-6 h-6 transition-transform duration-300 transform hover:scale-110" />
               </a>
-              <a href="https://x.com/LeonKohli" target="_blank" rel="noopener noreferrer" 
-                 class="text-gray-600 transition-colors duration-300 dark:text-gray-300 hover:text-primary">
+              <a href="https://x.com/LeonKohli" target="_blank" rel="noopener noreferrer"
+                class="text-gray-600 transition-colors duration-300 dark:text-gray-300 hover:text-primary">
                 <Icon name="mdi:twitter" class="w-6 h-6 transition-transform duration-300 transform hover:scale-110" />
               </a>
             </div>
             <div class="md:order-1">
               <p class="text-gray-600 dark:text-gray-300">&copy; {{ new Date().getFullYear() }} RepoLingo</p>
-              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Empowering developers with AI-friendly context</p>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Empowering developers with AI-friendly context
+              </p>
             </div>
           </div>
           <div class="pt-6 mt-6 border-t border-gray-200 dark:border-gray-700">
@@ -130,7 +137,7 @@
 </template>
 <script setup>
 const githubState = useGithubState()
-const { fetchRepo, fetchBranches, resetState, copyToClipboard, downloadXml } = useGithubActions()
+const { fetchRepo, fetchBranches, resetState, copyToClipboard, downloadOutput } = useGithubActions()
 const { showToast } = useToast()
 
 const fetchRepoWithToast = async () => {
@@ -149,8 +156,8 @@ const copyToClipboardWithToast = async () => {
   showToast(result.message, result.success ? 'success' : 'error')
 }
 
-const downloadXmlWithToast = () => {
-  const result = downloadXml()
+const downloadOutputWithToast = () => {
+  const result = downloadOutput()
   showToast(result.message, result.success ? 'success' : 'error')
 }
 
