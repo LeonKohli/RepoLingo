@@ -35,7 +35,7 @@ RepoLingo is tailored for LLM engineers, AI researchers, software developers, an
 
 ### Demo
 
-[Live Demo](https://llm-context.leonkohli.dev/)
+[Live Demo](https://repolingo.leonkohli.dev/)
 
 ### Tech Stack
 
