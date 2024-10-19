@@ -32,46 +32,48 @@ const fetchContents = async (
 
   for (const item of items) {
     if (item.type === 'dir') {
-      if (!shouldTraverse(item.path, selectedFiles)) continue;
-
-      const dirContents = await fetchContents(
-        octokit,
-        owner,
-        repo,
-        branch,
-        item.path,
-        useGitignore,
-        useStandardIgnore,
-        customIgnore,
-        fileSizeLimit,
-        gitignorePatterns,
-        selectedFiles
-      );
-
-      if (dirContents.length > 0) {
-        contents.push({
-          type: 'dir',
-          name: item.name,
-          path: item.path,
-          contents: dirContents,
-        });
-      }
-    } else if (item.type === 'file') {
-      if (!shouldIncludeFile(item.path, selectedFiles)) continue;
-
-      if (item.size <= fileSizeLimit * 1024) {
-        const fileContent = await octokit.repos.getContent({ owner, repo, path: item.path, ref: branch });
-        const content = Buffer.from(fileContent.data.content, 'base64').toString('utf-8');
-        const shouldBeIgnored = await shouldIgnore(
+      // Always traverse directories if no specific files are selected
+      if (selectedFiles.length === 0 || shouldTraverse(item.path, selectedFiles)) {
+        const dirContents = await fetchContents(
+          octokit,
+          owner,
+          repo,
+          branch,
           item.path,
-          gitignorePatterns,
           useGitignore,
           useStandardIgnore,
           customIgnore,
-          content
+          fileSizeLimit,
+          gitignorePatterns,
+          selectedFiles
         );
-        if (!shouldBeIgnored) {
-          contents.push({ type: 'file', name: item.name, path: item.path, content });
+
+        if (dirContents.length > 0) {
+          contents.push({
+            type: 'dir',
+            name: item.name,
+            path: item.path,
+            contents: dirContents,
+          });
+        }
+      }
+    } else if (item.type === 'file') {
+      // Include all files if no specific files are selected
+      if (selectedFiles.length === 0 || shouldIncludeFile(item.path, selectedFiles)) {
+        if (item.size <= fileSizeLimit * 1024) {
+          const fileContent = await octokit.repos.getContent({ owner, repo, path: item.path, ref: branch });
+          const content = Buffer.from(fileContent.data.content, 'base64').toString('utf-8');
+          const shouldBeIgnored = await shouldIgnore(
+            item.path,
+            gitignorePatterns,
+            useGitignore,
+            useStandardIgnore,
+            customIgnore,
+            content
+          );
+          if (!shouldBeIgnored) {
+            contents.push({ type: 'file', name: item.name, path: item.path, content });
+          }
         }
       }
     }
