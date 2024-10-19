@@ -8,8 +8,14 @@
       <!-- Main content -->
       <div class="flex flex-col gap-8 lg:flex-row" style="min-height: calc(100vh - 6rem);">
         <div class="w-full space-y-8 lg:w-1/3">
-          <RepositoryFetcher v-model:repoUrl="githubState.repoUrl" v-model:selectedBranch="githubState.selectedBranch"
-            v-model:branches="githubState.branches" @fetch-repo="fetchRepoWithToast" ref="repoFetcher" />
+          <RepositoryFetcher
+            v-model:repoUrl="githubState.repoUrl"
+            v-model:selectedBranch="githubState.selectedBranch"
+            v-model:branches="githubState.branches"
+            v-model:selectedFiles="githubState.selectedFiles"
+            @fetch-repo="fetchRepoWithToast"
+            ref="repoFetcher"
+          />
           <Settings v-model:useGitignore="githubState.useGitignore"
             v-model:useStandardIgnore="githubState.useStandardIgnore" v-model:includeTree="githubState.includeTree"
             v-model:fileSizeLimit="githubState.fileSizeLimit" v-model:customIgnore="githubState.customIgnore"

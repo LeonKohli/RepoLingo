@@ -26,6 +26,18 @@
         <CustomDropdown v-model="localSelectedBranch" :options="localBranches" :loading="isFetchingBranches"
           placeholder="Default branch" class="transition-all duration-300 ease-in-out" />
       </div>
+      <div class="mt-6">
+        <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+          Select Files and Folders
+        </label>
+        <FileTreeDropdown
+          :treeData="githubState.fileTree"
+          v-model="localSelectedFiles"
+          :loading="isLoadingFileTree"
+          :repoUrl="repoUrl"
+          :selectedBranch="localSelectedBranch"
+        />
+      </div>
       <button type="submit"
         class="w-full px-4 py-2 font-medium text-gray-800 transition-all duration-300 ease-in-out border border-gray-200 rounded-lg dark:text-white dark:border-gray-700 bg-primary hover:bg-primary-light focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 active:bg-primary-dark border-opacity-20">
         <Icon name="uil:search" class="mr-2 transition-all duration-300 ease-in-out" /> Fetch Repository
@@ -33,33 +45,57 @@
     </form>
   </section>
 </template>
+
 <script setup>
+import { ref, watch, onMounted } from 'vue'
+import FileTreeDropdown from './FileTreeDropdown.vue'
+import { useGithubActions, useGithubState } from '~/composables/useGithubState'
+
 const props = defineProps({
   repoUrl: String,
   selectedBranch: String,
   branches: Array,
+  selectedFiles: Array,
 })
-const emit = defineEmits(['fetch-repo', 'update:repoUrl', 'update:selectedBranch', 'update:branches'])
+
+const emit = defineEmits(['fetch-repo', 'update:repoUrl', 'update:selectedBranch', 'update:branches', 'update:selectedFiles'])
+
 const localBranches = ref([])
 const isFetchingBranches = ref(false)
 const localSelectedBranch = ref(props.selectedBranch)
-const { apiKey } = useGithubActions()
+const localSelectedFiles = ref(props.selectedFiles || [])
+
+const { apiKey, fetchFileTree: fetchFileTreeAction } = useGithubActions()
 const githubState = useGithubState()
+
 const updateRepoUrl = (newValue) => {
   emit('update:repoUrl', newValue)
   handleRepoUrlInput()
 }
-watch(localSelectedBranch, (newValue) => {
+
+watch(localSelectedBranch, async (newValue) => {
   emit('update:selectedBranch', newValue)
+  if (props.repoUrl && newValue) {
+    await fetchFileTree()
+    localSelectedFiles.value = [] // Reset selected files when branch changes
+  }
 })
+
+watch(localSelectedFiles, (newValue) => {
+  emit('update:selectedFiles', newValue)
+})
+
 watch(() => props.repoUrl, async (newValue) => {
   if (newValue) {
     await handleRepoUrlInput()
+    await fetchFileTree()
+    localSelectedFiles.value = [] // Reset selected files when repo URL changes
   } else {
     localBranches.value = []
     emit('update:branches', [])
   }
 })
+
 const handleRepoUrlInput = () => {
   if (props.repoUrl) {
     clearTimeout(handleRepoUrlInput.timer)
@@ -68,6 +104,7 @@ const handleRepoUrlInput = () => {
     }, 300)
   }
 }
+
 const fetchBranches = async () => {
   isFetchingBranches.value = true
   try {
@@ -87,6 +124,27 @@ const fetchBranches = async () => {
     isFetchingBranches.value = false
   }
 }
+
+const isLoadingFileTree = ref(false)
+
+const fetchFileTree = async () => {
+  isLoadingFileTree.value = true
+  try {
+    await fetchFileTreeAction()
+  } catch (error) {
+    console.error('Error fetching file tree:', error)
+    // Handle error (e.g., show a notification)
+  } finally {
+    isLoadingFileTree.value = false
+  }
+}
+
+onMounted(async () => {
+  if (props.repoUrl) {
+    await fetchFileTree()
+  }
+})
+
 // Expose the fetchBranches method to be called from the parent component
 defineExpose({ fetchBranches })
 </script>

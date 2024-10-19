@@ -1,3 +1,5 @@
+import { ref } from 'vue';
+
 export const useGithubState = () => useState('github', () => ({
   repoUrl: '',
   useGitignore: true,
@@ -15,6 +17,8 @@ export const useGithubState = () => useState('github', () => ({
   showApiKeyModal: false,
   toasts: [],
   outputFormat: 'xml',
+  fileTree: [],
+  selectedFiles: [],
 }))
 
 export const useGithubActions = () => {
@@ -43,7 +47,8 @@ export const useGithubActions = () => {
           fileSizeLimit: state.value.fileSizeLimit,
           selectedBranch: state.value.selectedBranch,
           includeTree: state.value.includeTree,
-          format: state.value.outputFormat
+          format: state.value.outputFormat,
+          selectedFiles: state.value.selectedFiles,
         }
       })
 
@@ -90,6 +95,32 @@ export const useGithubActions = () => {
     }
   }
 
+  const fetchFileTree = async () => {
+    if (!state.value.repoUrl) {
+      showToast('Please provide a repository URL', 'error');
+      return;
+    }
+
+    state.value.loading = true;
+
+    try {
+      const data = await $fetch('/api/github-files', {
+        method: 'POST',
+        body: {
+          repoUrl: state.value.repoUrl,
+          apiKey: apiKey.value,
+          selectedBranch: state.value.selectedBranch || 'main',
+        },
+      });
+
+      state.value.fileTree = data.tree;
+    } catch (error) {
+      showToast(error.message || 'An error occurred while fetching the file tree', 'error');
+    } finally {
+      state.value.loading = false;
+    }
+  };
+
   const handleError = (error) => {
     if (error.statusCode === 403 && error.statusMessage.includes('API rate limit exceeded')) {
       state.value.showApiKeyModal = true
@@ -122,6 +153,8 @@ export const useGithubActions = () => {
     state.value.branches = []
     state.value.selectedBranch = ''
     state.value.includeTree = false
+    state.value.fileTree = []
+    state.value.selectedFiles = []
   }
 
   const copyToClipboard = () => {
@@ -172,6 +205,7 @@ export const useGithubActions = () => {
   return {
     fetchRepo,
     fetchBranches,
+    fetchFileTree,
     resetState,
     copyToClipboard,
     downloadOutput,

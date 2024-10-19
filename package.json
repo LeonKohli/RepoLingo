@@ -24,6 +24,7 @@
     "vue-highlight.js": "^3.1.0"
   },
   "devDependencies": {
+    "@iconify-json/mdi": "^1.2.1",
     "@iconify-json/uil": "^1.1.9"
   }
 }
