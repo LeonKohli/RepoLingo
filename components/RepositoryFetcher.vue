@@ -21,22 +21,24 @@
           />
         </div>
       </div>
-      <div>
-        <label for="selected-branch" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Branch</label>
-        <CustomDropdown v-model="localSelectedBranch" :options="localBranches" :loading="isFetchingBranches"
-          placeholder="Default branch" class="transition-all duration-300 ease-in-out" />
-      </div>
-      <div class="mt-6">
-        <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-          Select Files and Folders
-        </label>
-        <FileTreeDropdown
-          :treeData="githubState.fileTree"
-          v-model="localSelectedFiles"
-          :loading="isLoadingFileTree"
-          :repoUrl="repoUrl"
-          :selectedBranch="localSelectedBranch"
-        />
+      <div class="flex space-x-4">
+        <div class="w-1/2">
+          <label for="selected-branch" class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Branch</label>
+          <CustomDropdown v-model="localSelectedBranch" :options="localBranches" :loading="isFetchingBranches"
+            placeholder="Default branch" class="transition-all duration-300 ease-in-out" />
+        </div>
+        <div class="w-1/2">
+          <label class="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+            Select Files and Folders
+          </label>
+          <FileTreeDropdown
+            :treeData="githubState.fileTree"
+            v-model="localSelectedFiles"
+            :loading="isLoadingFileTree"
+            :repoUrl="repoUrl"
+            :selectedBranch="localSelectedBranch"
+          />
+        </div>
       </div>
       <button type="submit"
         class="w-full px-4 py-2 font-medium text-gray-800 transition-all duration-300 ease-in-out border border-gray-200 rounded-lg dark:text-white dark:border-gray-700 bg-primary hover:bg-primary-light focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 active:bg-primary-dark border-opacity-20">
